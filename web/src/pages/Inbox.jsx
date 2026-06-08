@@ -10,6 +10,10 @@ import {
   BellOff,
   CheckSquare,
   Square,
+  Reply,
+  Eye,
+  EyeOff,
+  Save,
 } from 'lucide-react'
 import { api } from '../lib/api'
 import ConfirmModal from '../components/ConfirmModal'
@@ -30,6 +34,111 @@ const FILTERS = [
   { value: 'unread', label: 'Unread' },
   { value: 'read', label: 'Read' },
 ]
+
+function AnswerEditor({ message, onUpdate }) {
+  const [draft, setDraft] = useState(message.answer || '')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    setDraft(message.answer || '')
+  }, [message.answer])
+
+  const trimmed = draft.trim()
+  const saved = message.answer || ''
+  const dirty = trimmed !== saved.trim()
+  const hasAnswer = !!saved
+
+  const save = async () => {
+    setBusy(true)
+    setError('')
+    try {
+      const { data } = await api.patch(`/messages/${message._id}/answer`, {
+        answer: trimmed,
+      })
+      onUpdate(data.message)
+    } catch (err) {
+      setError(err?.response?.data?.error || 'failed to save answer')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const togglePublished = async () => {
+    setBusy(true)
+    setError('')
+    try {
+      const { data } = await api.patch(`/messages/${message._id}/answer`, {
+        published: !message.published,
+      })
+      onUpdate(data.message)
+    } catch (err) {
+      setError(err?.response?.data?.error || 'failed to toggle publish')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="mt-4 pt-4 border-t border-white/10">
+      <div className="flex items-center gap-2 mb-2">
+        <Reply className="w-3.5 h-3.5 text-slate-400" />
+        <span className="text-xs text-slate-400 font-medium">Your reply</span>
+        {hasAnswer && (
+          <span
+            className={`ml-auto text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+              message.published
+                ? 'bg-green-400/15 text-green-200 border-green-400/30'
+                : 'bg-slate-400/15 text-slate-300 border-slate-400/30'
+            }`}
+          >
+            {message.published ? 'public' : 'hidden'}
+          </span>
+        )}
+      </div>
+      <textarea
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        placeholder="Write a public reply (visible on the Answers page)..."
+        rows={3}
+        maxLength={4000}
+        className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder:text-slate-500 px-3 py-2 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-colors duration-200 resize-y"
+      />
+      {error && <p className="text-red-300 text-xs mt-1">{error}</p>}
+      <div className="flex flex-wrap items-center gap-2 mt-2">
+        <button
+          onClick={save}
+          disabled={busy || !dirty}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-cyan-400/15 hover:bg-cyan-400/25 border border-cyan-400/30 text-cyan-100 text-xs font-medium transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Save className="w-3.5 h-3.5" /> {hasAnswer ? 'Update' : 'Save reply'}
+        </button>
+        {hasAnswer && (
+          <button
+            onClick={togglePublished}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/15 text-slate-200 text-xs font-medium transition-colors duration-200 cursor-pointer disabled:opacity-50"
+          >
+            {message.published ? (
+              <>
+                <EyeOff className="w-3.5 h-3.5" /> Hide
+              </>
+            ) : (
+              <>
+                <Eye className="w-3.5 h-3.5" /> Publish
+              </>
+            )}
+          </button>
+        )}
+        {message.answeredAt && (
+          <span className="text-[11px] text-slate-500 ml-auto">
+            Answered {new Date(message.answeredAt).toLocaleString()}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function Inbox({ onLogout }) {
   const [messages, setMessages] = useState([])
@@ -145,6 +254,10 @@ export default function Inbox({ onLogout }) {
   const markRead = async (id) => {
     await api.patch(`/messages/${id}/read`)
     setMessages((m) => m.map((x) => (x._id === id ? { ...x, read: true } : x)))
+  }
+
+  const updateMessage = (updated) => {
+    setMessages((m) => m.map((x) => (x._id === updated._id ? { ...x, ...updated } : x)))
   }
 
   const confirmDelete = async () => {
@@ -331,6 +444,7 @@ export default function Inbox({ onLogout }) {
                     <p className="text-slate-200 mt-3 whitespace-pre-wrap break-words leading-relaxed">
                       {m.content}
                     </p>
+                    <AnswerEditor message={m} onUpdate={updateMessage} />
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {!m.read && (

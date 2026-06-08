@@ -11,6 +11,7 @@ const Login = lazy(() => import('./pages/Login'))
 const Inbox = lazy(() => import('./pages/Inbox'))
 const Visitors = lazy(() => import('./pages/Visitors'))
 const Confession = lazy(() => import('./pages/Confession'))
+const Answers = lazy(() => import('./pages/Answers'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 function RouteFallback() {
@@ -85,6 +86,7 @@ export default function App() {
                 }
               />
               <Route path="/confession" element={<Confession />} />
+              <Route path="/answers" element={<Answers />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

@@ -37,7 +37,11 @@ router.post('/', messageLimiter, messageHourlyLimiter, async (req, res) => {
     return res.status(400).json({ error: 'message content is required' })
   }
   const visitorName = typeof name === 'string' ? name.trim() : ''
-  const msg = await Message.create({ name: visitorName, content: content.trim() })
+  const msg = await Message.create({
+    name: visitorName,
+    content: content.trim(),
+    ip: req.ip || '',
+  })
   notifyNewMessage(msg)
   res.status(201).json({ ok: true, id: msg._id })
 })
@@ -86,6 +90,28 @@ router.patch('/:id/read', requireAuth, async (req, res) => {
     { read: true },
     { new: true }
   )
+  if (!msg) return res.status(404).json({ error: 'not found' })
+  res.json({ ok: true, message: msg })
+})
+
+router.patch('/:id/answer', requireAuth, async (req, res) => {
+  const { answer, published } = req.body || {}
+  const update = {}
+  if (answer !== undefined) {
+    if (typeof answer !== 'string') {
+      return res.status(400).json({ error: 'answer must be a string' })
+    }
+    const trimmed = answer.trim()
+    if (trimmed.length > 4000) {
+      return res.status(400).json({ error: 'answer too long' })
+    }
+    update.answer = trimmed
+    update.answeredAt = trimmed ? new Date() : null
+  }
+  if (published !== undefined) {
+    update.published = !!published
+  }
+  const msg = await Message.findByIdAndUpdate(req.params.id, update, { new: true })
   if (!msg) return res.status(404).json({ error: 'not found' })
   res.json({ ok: true, message: msg })
 })

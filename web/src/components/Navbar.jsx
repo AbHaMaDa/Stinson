@@ -97,6 +97,9 @@ export default function Navbar({ authed }) {
           <NavLink to="/contact" className={desktopItem}>
             Contact
           </NavLink>
+          <NavLink to="/answers" className={desktopItem}>
+            Answers
+          </NavLink>
           {confessionVisible && (
             <NavLink to="/confession" className={desktopItem}>
               Confession
@@ -149,6 +152,9 @@ export default function Navbar({ authed }) {
             </NavLink>
             <NavLink to="/contact" className={mobileItem}>
               Contact
+            </NavLink>
+            <NavLink to="/answers" className={mobileItem}>
+              Answers
             </NavLink>
             {confessionVisible && (
               <NavLink to="/confession" className={mobileItem}>
