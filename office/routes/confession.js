@@ -8,12 +8,12 @@ const router = Router()
 const VALID_MODES = new Set(['hidden', 'public', 'allowlist'])
 
 function defaultConfession() {
-  return { mode: 'hidden', allowedIps: [] }
+  return { mode: 'hidden', allowedIps: [], question: '', yesReveal: '' }
 }
 
 async function getConfession() {
   const doc = await SiteSettings.findById(SITE_SETTINGS_ID).lean()
-  return doc?.confession || defaultConfession()
+  return { ...defaultConfession(), ...(doc?.confession || {}) }
 }
 
 function isVisibleTo(conf, ip) {
@@ -27,8 +27,14 @@ function isVisibleTo(conf, ip) {
 router.get('/access', async (req, res) => {
   const conf = await getConfession()
   const admin = isAdmin(req)
-  if (admin) return res.json({ visible: true, admin: true })
-  res.json({ visible: isVisibleTo(conf, req.ip || '') })
+  const visible = admin || isVisibleTo(conf, req.ip || '')
+  if (!visible) return res.json({ visible: false })
+  res.json({
+    visible: true,
+    admin,
+    question: conf.question,
+    yesReveal: conf.yesReveal,
+  })
 })
 
 router.get('/settings', requireAuth, async (_req, res) => {
@@ -37,7 +43,7 @@ router.get('/settings', requireAuth, async (_req, res) => {
 })
 
 router.put('/settings', requireAuth, async (req, res) => {
-  const { mode, allowedIps } = req.body || {}
+  const { mode, allowedIps, question, yesReveal } = req.body || {}
   const update = {}
   if (mode !== undefined) {
     if (!VALID_MODES.has(mode)) {
@@ -50,6 +56,18 @@ router.put('/settings', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'allowedIps must be string array' })
     }
     update['confession.allowedIps'] = [...new Set(allowedIps)]
+  }
+  if (question !== undefined) {
+    if (typeof question !== 'string' || question.length > 300) {
+      return res.status(400).json({ error: 'question must be a string up to 300 chars' })
+    }
+    update['confession.question'] = question
+  }
+  if (yesReveal !== undefined) {
+    if (typeof yesReveal !== 'string' || yesReveal.length > 1000) {
+      return res.status(400).json({ error: 'yesReveal must be a string up to 1000 chars' })
+    }
+    update['confession.yesReveal'] = yesReveal
   }
   await SiteSettings.findByIdAndUpdate(
     SITE_SETTINGS_ID,

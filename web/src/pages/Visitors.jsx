@@ -57,8 +57,15 @@ export default function Visitors() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [clearAllOpen, setClearAllOpen] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [confession, setConfession] = useState({ mode: 'hidden', allowedIps: [] })
+  const [confession, setConfession] = useState({
+    mode: 'hidden',
+    allowedIps: [],
+    question: '',
+    yesReveal: '',
+  })
   const [savingConfession, setSavingConfession] = useState(false)
+  const [questionDraft, setQuestionDraft] = useState('')
+  const [revealDraft, setRevealDraft] = useState('')
 
   useDocumentTitle('Visitors')
 
@@ -72,10 +79,15 @@ export default function Visitors() {
       ])
       setVisitors(vRes.data.visitors)
       setStats(vRes.data.stats)
-      setConfession({
+      const conf = {
         mode: cRes.data.mode || 'hidden',
         allowedIps: cRes.data.allowedIps || [],
-      })
+        question: cRes.data.question || '',
+        yesReveal: cRes.data.yesReveal || '',
+      }
+      setConfession(conf)
+      setQuestionDraft(conf.question)
+      setRevealDraft(conf.yesReveal)
     } catch (err) {
       setError(err?.response?.data?.error || 'failed to load visitors')
     } finally {
@@ -99,12 +111,25 @@ export default function Visitors() {
       setConfession({
         mode: data.mode || 'hidden',
         allowedIps: data.allowedIps || [],
+        question: data.question || '',
+        yesReveal: data.yesReveal || '',
       })
     } catch (err) {
       setConfession(prev)
       setError(err?.response?.data?.error || 'failed to save confession settings')
     } finally {
       setSavingConfession(false)
+    }
+  }
+
+  const saveQuestion = () => {
+    if (questionDraft !== confession.question) {
+      saveConfession({ question: questionDraft })
+    }
+  }
+  const saveReveal = () => {
+    if (revealDraft !== confession.yesReveal) {
+      saveConfession({ yesReveal: revealDraft })
     }
   }
 
@@ -202,19 +227,55 @@ export default function Visitors() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white/5 border border-white/10 p-4 mb-6">
-        <div className="flex items-center justify-between mb-3">
+      <div className="rounded-xl bg-white/5 border border-white/10 p-4 mb-6 space-y-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-white">Confession access</h2>
+            <h2 className="text-sm font-semibold text-white">Confession</h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Who can see the Confession tab.
+              Question, reveal, and who can see the tab.
             </p>
           </div>
           {savingConfession && (
             <span className="text-xs text-slate-400">Saving...</span>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-2">
+
+        <div>
+          <label className="text-xs text-slate-400 font-medium block mb-1">
+            Question
+          </label>
+          <textarea
+            value={questionDraft}
+            onChange={(e) => setQuestionDraft(e.target.value)}
+            onBlur={saveQuestion}
+            maxLength={300}
+            rows={2}
+            placeholder="Do you like me?"
+            className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder:text-slate-500 px-3 py-2 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-colors duration-200 resize-y"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs text-slate-400 font-medium block mb-1">
+            Yes reveal
+          </label>
+          <textarea
+            value={revealDraft}
+            onChange={(e) => setRevealDraft(e.target.value)}
+            onBlur={saveReveal}
+            maxLength={1000}
+            rows={2}
+            placeholder="I knew it. ❤️"
+            className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder:text-slate-500 px-3 py-2 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-colors duration-200 resize-y"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">
+            Shown after Yes is clicked.
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs text-slate-400 font-medium mb-2">Who can see the tab</p>
+          <div className="grid grid-cols-3 gap-2">
           {CONFESSION_MODES.map((m) => {
             const Icon = m.icon
             const active = confession.mode === m.value
@@ -235,35 +296,36 @@ export default function Visitors() {
             )
           })}
         </div>
-        {confession.mode === 'allowlist' && (
-          <div className="mt-3">
-            <p className="text-xs text-slate-400">
-              Tick the lock next to a visitor below to let them see the tab.{' '}
-              {confession.allowedIps.length} allowed.
-            </p>
-            {confession.allowedIps.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {confession.allowedIps.map((ip) => (
-                  <span
-                    key={ip}
-                    className="inline-flex items-center gap-1.5 pl-2 pr-1 py-0.5 rounded-md bg-cyan-400/15 border border-cyan-400/30 text-cyan-100 text-xs font-mono"
-                  >
-                    {ip}
-                    <button
-                      onClick={() => toggleAllowed(ip)}
-                      disabled={savingConfession}
-                      className="p-0.5 rounded hover:bg-cyan-400/20 text-cyan-200 transition-colors duration-200 cursor-pointer disabled:opacity-50"
-                      aria-label={`Revoke ${ip}`}
-                      title="Revoke"
+          {confession.mode === 'allowlist' && (
+            <div className="mt-3">
+              <p className="text-xs text-slate-400">
+                Tick the lock next to a visitor below to let them see the tab.{' '}
+                {confession.allowedIps.length} allowed.
+              </p>
+              {confession.allowedIps.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {confession.allowedIps.map((ip) => (
+                    <span
+                      key={ip}
+                      className="inline-flex items-center gap-1.5 pl-2 pr-1 py-0.5 rounded-md bg-cyan-400/15 border border-cyan-400/30 text-cyan-100 text-xs font-mono"
                     >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                      {ip}
+                      <button
+                        onClick={() => toggleAllowed(ip)}
+                        disabled={savingConfession}
+                        className="p-0.5 rounded hover:bg-cyan-400/20 text-cyan-200 transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                        aria-label={`Revoke ${ip}`}
+                        title="Revoke"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <label className="relative block mb-4">

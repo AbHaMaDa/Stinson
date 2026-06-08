@@ -17,6 +17,8 @@ const siteSettingsSchema = new mongoose.Schema(
         default: 'hidden',
       },
       allowedIps: { type: [String], default: [] },
+      question: { type: String, maxlength: 300, default: '' },
+      yesReveal: { type: String, maxlength: 1000, default: '' },
     },
   },
   { _id: false, timestamps: true }
