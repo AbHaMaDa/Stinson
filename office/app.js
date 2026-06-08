@@ -27,16 +27,6 @@ app.use(
 app.use(express.json())
 app.use(cookieParser())
 
-app.use('/api', async (_req, res, next) => {
-  try {
-    await ensureDB()
-    next()
-  } catch (err) {
-    console.error('[db] connect failed:', err.message)
-    res.status(503).json({ error: 'database unavailable' })
-  }
-})
-
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
 app.get('/api/db-status', async (_req, res) => {
@@ -61,6 +51,16 @@ app.get('/api/db-status', async (_req, res) => {
       state: states[mongoose.connection.readyState] || 'unknown',
       uriPreview: masked,
     })
+  }
+})
+
+app.use('/api', async (_req, res, next) => {
+  try {
+    await ensureDB()
+    next()
+  } catch (err) {
+    console.error('[db] connect failed:', err.message)
+    res.status(503).json({ error: 'database unavailable' })
   }
 })
 
