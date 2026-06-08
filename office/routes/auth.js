@@ -10,7 +10,7 @@ const router = Router()
 const isProd = process.env.NODE_ENV === 'production'
 const cookieOptions = {
   httpOnly: true,
-  sameSite: isProd ? 'strict' : 'lax',
+  sameSite: isProd ? 'none' : 'lax',
   secure: isProd,
   maxAge: 7 * 24 * 60 * 60 * 1000,
 }
