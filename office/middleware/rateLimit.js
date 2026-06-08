@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit'
 import { sendAlert } from '../lib/mailer.js'
+import { runInBackground } from '../lib/background.js'
 
 export const messageLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -51,7 +52,10 @@ export const loginLimiter = rateLimit({
         'That IP is now blocked from logging in for 15 minutes.',
         'You will not receive another alert from this IP for 30 minutes.',
       ].join('\n')
-      sendAlert('[Stinson] Failed login attempts blocked', body).catch(() => {})
+      runInBackground(
+        sendAlert('[Stinson] Failed login attempts blocked', body),
+        'login-alert'
+      )
     }
     res.status(options.statusCode).json(options.message)
   },
