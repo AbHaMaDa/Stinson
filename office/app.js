@@ -1,4 +1,5 @@
 import express from 'express'
+import mongoose from 'mongoose'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
@@ -37,6 +38,31 @@ app.use('/api', async (_req, res, next) => {
 })
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
+
+app.get('/api/db-status', async (_req, res) => {
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting']
+  const uri = process.env.MONGODB_URI || ''
+  const masked = uri
+    ? uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:***@').replace(/(@[^/]+\/)[^?]*/, '$1<db>')
+    : '(unset)'
+  try {
+    await ensureDB()
+    res.json({
+      ok: true,
+      state: states[mongoose.connection.readyState] || 'unknown',
+      host: mongoose.connection.host,
+      db: mongoose.connection.name,
+      uriPreview: masked,
+    })
+  } catch (err) {
+    res.status(503).json({
+      ok: false,
+      error: err.message,
+      state: states[mongoose.connection.readyState] || 'unknown',
+      uriPreview: masked,
+    })
+  }
+})
 
 app.get('/', (_req, res) => {
   const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173'
