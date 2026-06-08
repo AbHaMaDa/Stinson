@@ -7,6 +7,9 @@ import { connectDB } from './db.js'
 import authRoutes from './routes/auth.js'
 import messageRoutes from './routes/messages.js'
 import pushRoutes from './routes/push.js'
+import { isPushEnabled, sendNotification } from './lib/push.js'
+import { PushSubscription } from './models/PushSubscription.js'
+import { sendAlert } from './lib/mailer.js'
 
 const app = express()
 
@@ -52,6 +55,50 @@ app.get('/api/db-status', async (_req, res) => {
       uriPreview: masked,
     })
   }
+})
+
+function requireDiagKey(req, res, next) {
+  const key = req.get('x-diag-key')
+  if (!process.env.DIAG_KEY || key !== process.env.DIAG_KEY) {
+    return res.status(404).end()
+  }
+  next()
+}
+
+app.get('/api/diag/push', requireDiagKey, async (_req, res) => {
+  try {
+    await ensureDB()
+    const count = await PushSubscription.countDocuments()
+    res.json({
+      vapidConfigured: isPushEnabled(),
+      subscriptionCount: count,
+      vapidSubject: process.env.VAPID_SUBJECT || '(unset)',
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/diag/push-test', requireDiagKey, async (_req, res) => {
+  try {
+    await ensureDB()
+    const result = await sendNotification({
+      title: 'Stinson diagnostic',
+      body: 'This is a test push from /api/diag/push-test',
+      url: '/inbox',
+    })
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/diag/email-test', requireDiagKey, async (_req, res) => {
+  const result = await sendAlert(
+    '[Stinson] Diagnostic test',
+    `Test email from /api/diag/email-test at ${new Date().toISOString()}`
+  )
+  res.json(result)
 })
 
 app.use('/api', async (_req, res, next) => {
