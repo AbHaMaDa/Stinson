@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { RefreshCw, Trash2, Search, Globe, Shield, Users } from 'lucide-react'
+import {
+  RefreshCw,
+  Trash2,
+  Search,
+  Globe,
+  Shield,
+  Users,
+  Eye,
+  EyeOff,
+  Lock,
+  Check,
+  X,
+} from 'lucide-react'
 import { api } from '../lib/api'
 import ConfirmModal from '../components/ConfirmModal'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -30,6 +42,12 @@ function formatLocation(v) {
   return parts.join(', ') || 'Unknown'
 }
 
+const CONFESSION_MODES = [
+  { value: 'hidden', label: 'Hidden', icon: EyeOff, hint: 'No one sees the tab.' },
+  { value: 'public', label: 'Public', icon: Eye, hint: 'Everyone sees the tab.' },
+  { value: 'allowlist', label: 'Allowlist', icon: Lock, hint: 'Only checked IPs see it.' },
+]
+
 export default function Visitors() {
   const [visitors, setVisitors] = useState([])
   const [stats, setStats] = useState({ total: 0, last24h: 0 })
@@ -39,6 +57,8 @@ export default function Visitors() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [clearAllOpen, setClearAllOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [confession, setConfession] = useState({ mode: 'hidden', allowedIps: [] })
+  const [savingConfession, setSavingConfession] = useState(false)
 
   useDocumentTitle('Visitors')
 
@@ -46,9 +66,16 @@ export default function Visitors() {
     setLoading(true)
     setError('')
     try {
-      const { data } = await api.get('/visitors')
-      setVisitors(data.visitors)
-      setStats(data.stats)
+      const [vRes, cRes] = await Promise.all([
+        api.get('/visitors'),
+        api.get('/confession/settings'),
+      ])
+      setVisitors(vRes.data.visitors)
+      setStats(vRes.data.stats)
+      setConfession({
+        mode: cRes.data.mode || 'hidden',
+        allowedIps: cRes.data.allowedIps || [],
+      })
     } catch (err) {
       setError(err?.response?.data?.error || 'failed to load visitors')
     } finally {
@@ -59,6 +86,34 @@ export default function Visitors() {
   useEffect(() => {
     load()
   }, [])
+
+  const allowedSet = useMemo(() => new Set(confession.allowedIps), [confession.allowedIps])
+
+  const saveConfession = async (patch) => {
+    const prev = confession
+    const next = { ...confession, ...patch }
+    setConfession(next)
+    setSavingConfession(true)
+    try {
+      const { data } = await api.put('/confession/settings', patch)
+      setConfession({
+        mode: data.mode || 'hidden',
+        allowedIps: data.allowedIps || [],
+      })
+    } catch (err) {
+      setConfession(prev)
+      setError(err?.response?.data?.error || 'failed to save confession settings')
+    } finally {
+      setSavingConfession(false)
+    }
+  }
+
+  const toggleAllowed = (ip) => {
+    const next = allowedSet.has(ip)
+      ? confession.allowedIps.filter((x) => x !== ip)
+      : [...confession.allowedIps, ip]
+    saveConfession({ allowedIps: next })
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -126,7 +181,7 @@ export default function Visitors() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="rounded-xl bg-white/5 border border-white/10 p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-cyan-400/15 border border-cyan-400/30 grid place-items-center">
             <Users className="w-5 h-5 text-cyan-300" />
@@ -145,6 +200,70 @@ export default function Visitors() {
             <p className="text-2xl font-bold text-white">{stats.last24h}</p>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-xl bg-white/5 border border-white/10 p-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-white">Confession access</h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Who can see the Confession tab.
+            </p>
+          </div>
+          {savingConfession && (
+            <span className="text-xs text-slate-400">Saving...</span>
+          )}
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {CONFESSION_MODES.map((m) => {
+            const Icon = m.icon
+            const active = confession.mode === m.value
+            return (
+              <button
+                key={m.value}
+                onClick={() => saveConfession({ mode: m.value })}
+                className={`flex flex-col items-center gap-1 px-3 py-3 rounded-lg border text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                  active
+                    ? 'bg-cyan-400/15 border-cyan-400/40 text-cyan-100'
+                    : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                }`}
+                title={m.hint}
+              >
+                <Icon className="w-4 h-4" />
+                {m.label}
+              </button>
+            )
+          })}
+        </div>
+        {confession.mode === 'allowlist' && (
+          <div className="mt-3">
+            <p className="text-xs text-slate-400">
+              Tick the lock next to a visitor below to let them see the tab.{' '}
+              {confession.allowedIps.length} allowed.
+            </p>
+            {confession.allowedIps.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {confession.allowedIps.map((ip) => (
+                  <span
+                    key={ip}
+                    className="inline-flex items-center gap-1.5 pl-2 pr-1 py-0.5 rounded-md bg-cyan-400/15 border border-cyan-400/30 text-cyan-100 text-xs font-mono"
+                  >
+                    {ip}
+                    <button
+                      onClick={() => toggleAllowed(ip)}
+                      disabled={savingConfession}
+                      className="p-0.5 rounded hover:bg-cyan-400/20 text-cyan-200 transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                      aria-label={`Revoke ${ip}`}
+                      title="Revoke"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <label className="relative block mb-4">
@@ -216,14 +335,35 @@ export default function Visitors() {
                     </p>
                   )}
                 </div>
-                <button
-                  onClick={() => setDeleteTarget(v)}
-                  className="shrink-0 p-2 rounded-lg hover:bg-red-500/20 text-red-300 transition-colors duration-200 cursor-pointer"
-                  aria-label="Delete"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  {confession.mode === 'allowlist' && (
+                    <button
+                      onClick={() => toggleAllowed(v._id)}
+                      disabled={savingConfession}
+                      className={`p-2 rounded-lg transition-colors duration-200 cursor-pointer disabled:opacity-50 ${
+                        allowedSet.has(v._id)
+                          ? 'bg-cyan-400/20 text-cyan-200 hover:bg-cyan-400/30'
+                          : 'hover:bg-white/10 text-slate-400'
+                      }`}
+                      aria-label={allowedSet.has(v._id) ? 'Revoke confession access' : 'Grant confession access'}
+                      title={allowedSet.has(v._id) ? 'Allowed — click to revoke' : 'Allow confession access'}
+                    >
+                      {allowedSet.has(v._id) ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Lock className="w-4 h-4" />
+                      )}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setDeleteTarget(v)}
+                    className="p-2 rounded-lg hover:bg-red-500/20 text-red-300 transition-colors duration-200 cursor-pointer"
+                    aria-label="Delete"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </li>
           ))}

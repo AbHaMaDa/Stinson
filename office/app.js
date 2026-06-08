@@ -8,6 +8,7 @@ import messageRoutes from './routes/messages.js'
 import pushRoutes from './routes/push.js'
 import siteRoutes from './routes/site.js'
 import visitorRoutes from './routes/visitors.js'
+import confessionRoutes from './routes/confession.js'
 import { visitorLogger } from './middleware/visitorLog.js'
 
 const app = express()
@@ -175,6 +176,7 @@ app.use('/api/messages', messageRoutes)
 app.use('/api/push', pushRoutes)
 app.use('/api/site', siteRoutes)
 app.use('/api/visitors', visitorRoutes)
+app.use('/api/confession', confessionRoutes)
 
 app.use((err, _req, res, _next) => {
   console.error('[error]', err)

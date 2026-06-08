@@ -10,6 +10,7 @@ const ContactPage = lazy(() => import('./pages/Contact'))
 const Login = lazy(() => import('./pages/Login'))
 const Inbox = lazy(() => import('./pages/Inbox'))
 const Visitors = lazy(() => import('./pages/Visitors'))
+const Confession = lazy(() => import('./pages/Confession'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 function RouteFallback() {
@@ -83,6 +84,7 @@ export default function App() {
                   </RequireAuth>
                 }
               />
+              <Route path="/confession" element={<Confession />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

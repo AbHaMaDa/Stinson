@@ -22,11 +22,27 @@ function UnreadBadge({ count }) {
 export default function Navbar({ authed }) {
   const [open, setOpen] = useState(false)
   const [unread, setUnread] = useState(0)
+  const [confessionVisible, setConfessionVisible] = useState(false)
   const location = useLocation()
 
   useEffect(() => {
     setOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    let cancelled = false
+    api
+      .get('/confession/access')
+      .then(({ data }) => {
+        if (!cancelled) setConfessionVisible(!!data.visible)
+      })
+      .catch(() => {
+        if (!cancelled) setConfessionVisible(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [authed, location.pathname])
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -81,6 +97,11 @@ export default function Navbar({ authed }) {
           <NavLink to="/contact" className={desktopItem}>
             Contact
           </NavLink>
+          {confessionVisible && (
+            <NavLink to="/confession" className={desktopItem}>
+              Confession
+            </NavLink>
+          )}
           <NavLink to="/inbox" className={desktopItem}>
             Inbox<UnreadBadge count={unread} />
           </NavLink>
@@ -129,6 +150,11 @@ export default function Navbar({ authed }) {
             <NavLink to="/contact" className={mobileItem}>
               Contact
             </NavLink>
+            {confessionVisible && (
+              <NavLink to="/confession" className={mobileItem}>
+                Confession
+              </NavLink>
+            )}
             <NavLink to="/inbox" className={mobileItem}>
               Inbox<UnreadBadge count={unread} />
             </NavLink>

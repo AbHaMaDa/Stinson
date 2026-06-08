@@ -10,6 +10,14 @@ const siteSettingsSchema = new mongoose.Schema(
       contentType: String,
       updatedAt: Date,
     },
+    confession: {
+      mode: {
+        type: String,
+        enum: ['hidden', 'public', 'allowlist'],
+        default: 'hidden',
+      },
+      allowedIps: { type: [String], default: [] },
+    },
   },
   { _id: false, timestamps: true }
 )
