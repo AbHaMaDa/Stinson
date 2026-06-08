@@ -26,6 +26,16 @@ app.use(
 app.use(express.json())
 app.use(cookieParser())
 
+app.use('/api', async (_req, res, next) => {
+  try {
+    await ensureDB()
+    next()
+  } catch (err) {
+    console.error('[db] connect failed:', err.message)
+    res.status(503).json({ error: 'database unavailable' })
+  }
+})
+
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
 app.get('/', (_req, res) => {
