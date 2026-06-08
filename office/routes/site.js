@@ -15,11 +15,17 @@ function parseDataUrl(dataUrl) {
 }
 
 router.get('/avatar', async (_req, res) => {
-  const doc = await SiteSettings.findById(SITE_SETTINGS_ID).lean()
-  if (!doc?.avatar?.data) return res.status(404).end()
+  const doc = await SiteSettings.findById(SITE_SETTINGS_ID)
+  const raw = doc?.avatar?.data
+  if (!raw) return res.status(404).end()
+  const buf = Buffer.isBuffer(raw)
+    ? raw
+    : raw.buffer
+      ? Buffer.from(raw.buffer)
+      : Buffer.from(raw)
   res.set('Content-Type', doc.avatar.contentType || 'image/jpeg')
   res.set('Cache-Control', 'public, max-age=60, must-revalidate')
-  res.send(doc.avatar.data)
+  res.end(buf)
 })
 
 router.post('/avatar', requireAuth, async (req, res) => {
