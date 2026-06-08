@@ -1,4 +1,5 @@
 import express from 'express'
+import mongoose from 'mongoose'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
@@ -187,8 +188,18 @@ app.use((err, _req, res, _next) => {
 
 let dbPromise = null
 export function ensureDB() {
-  if (!dbPromise) dbPromise = connectDB(process.env.MONGODB_URI)
+  const state = mongoose.connection.readyState
+  if (state === 1) return Promise.resolve()
+  if (state === 2 && dbPromise) return dbPromise
+  dbPromise = connectDB(process.env.MONGODB_URI).catch((err) => {
+    dbPromise = null
+    throw err
+  })
   return dbPromise
 }
+
+mongoose.connection.on('disconnected', () => {
+  dbPromise = null
+})
 
 export default app
