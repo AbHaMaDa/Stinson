@@ -6,6 +6,7 @@ import { connectDB } from './db.js'
 import authRoutes from './routes/auth.js'
 import messageRoutes from './routes/messages.js'
 import pushRoutes from './routes/push.js'
+import siteRoutes from './routes/site.js'
 
 const app = express()
 
@@ -23,7 +24,7 @@ app.use(
     credentials: true,
   })
 )
-app.use(express.json())
+app.use(express.json({ limit: '5mb' }))
 app.use(cookieParser())
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
@@ -168,6 +169,7 @@ app.get('/', (_req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/messages', messageRoutes)
 app.use('/api/push', pushRoutes)
+app.use('/api/site', siteRoutes)
 
 app.use((err, _req, res, _next) => {
   console.error('[error]', err)

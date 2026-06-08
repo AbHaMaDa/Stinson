@@ -54,7 +54,7 @@ export default function App() {
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/about" element={<AboutPage />} />
+              <Route path="/about" element={<AboutPage authed={authed} />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route
                 path="/login"
