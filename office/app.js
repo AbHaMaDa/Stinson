@@ -1,5 +1,4 @@
 import express from 'express'
-import mongoose from 'mongoose'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
@@ -7,9 +6,6 @@ import { connectDB } from './db.js'
 import authRoutes from './routes/auth.js'
 import messageRoutes from './routes/messages.js'
 import pushRoutes from './routes/push.js'
-import { isPushEnabled, sendNotification } from './lib/push.js'
-import { PushSubscription } from './models/PushSubscription.js'
-import { sendAlert } from './lib/mailer.js'
 
 const app = express()
 
@@ -31,75 +27,6 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
-
-app.get('/api/db-status', async (_req, res) => {
-  const states = ['disconnected', 'connected', 'connecting', 'disconnecting']
-  const uri = process.env.MONGODB_URI || ''
-  const masked = uri
-    ? uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:***@').replace(/(@[^/]+\/)[^?]*/, '$1<db>')
-    : '(unset)'
-  try {
-    await ensureDB()
-    res.json({
-      ok: true,
-      state: states[mongoose.connection.readyState] || 'unknown',
-      host: mongoose.connection.host,
-      db: mongoose.connection.name,
-      uriPreview: masked,
-    })
-  } catch (err) {
-    res.status(503).json({
-      ok: false,
-      error: err.message,
-      state: states[mongoose.connection.readyState] || 'unknown',
-      uriPreview: masked,
-    })
-  }
-})
-
-function requireDiagKey(req, res, next) {
-  const key = req.get('x-diag-key')
-  if (!process.env.DIAG_KEY || key !== process.env.DIAG_KEY) {
-    return res.status(404).end()
-  }
-  next()
-}
-
-app.get('/api/diag/push', requireDiagKey, async (_req, res) => {
-  try {
-    await ensureDB()
-    const count = await PushSubscription.countDocuments()
-    res.json({
-      vapidConfigured: isPushEnabled(),
-      subscriptionCount: count,
-      vapidSubject: process.env.VAPID_SUBJECT || '(unset)',
-    })
-  } catch (err) {
-    res.status(500).json({ error: err.message })
-  }
-})
-
-app.post('/api/diag/push-test', requireDiagKey, async (_req, res) => {
-  try {
-    await ensureDB()
-    const result = await sendNotification({
-      title: 'Stinson diagnostic',
-      body: 'This is a test push from /api/diag/push-test',
-      url: '/inbox',
-    })
-    res.json(result)
-  } catch (err) {
-    res.status(500).json({ error: err.message })
-  }
-})
-
-app.post('/api/diag/email-test', requireDiagKey, async (_req, res) => {
-  const result = await sendAlert(
-    '[Stinson] Diagnostic test',
-    `Test email from /api/diag/email-test at ${new Date().toISOString()}`
-  )
-  res.json(result)
-})
 
 app.use('/api', async (_req, res, next) => {
   try {
