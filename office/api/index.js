@@ -1,6 +1,7 @@
 import app, { ensureDB } from '../app.js'
 
-export default async function handler(req, res) {
-  await ensureDB()
+ensureDB().catch((e) => console.error('[db] connect failed:', e.message))
+
+export default function handler(req, res) {
   return app(req, res)
 }
