@@ -7,14 +7,18 @@ import { verifyCaptcha } from '../lib/captcha.js'
 
 const router = Router()
 
-function notifyNewMessage(msg) {
+async function notifyNewMessage(msg) {
   const preview = msg.content.length > 140 ? msg.content.slice(0, 140) + '…' : msg.content
-  sendNotification({
-    title: `New message from ${msg.name || 'Anonymous'}`,
-    body: preview,
-    url: '/inbox',
-    messageId: msg._id.toString(),
-  }).catch((e) => console.warn('[push] notifyNewMessage failed:', e.message))
+  try {
+    await sendNotification({
+      title: `New message from ${msg.name || 'Anonymous'}`,
+      body: preview,
+      url: '/inbox',
+      messageId: msg._id.toString(),
+    })
+  } catch (e) {
+    console.warn('[push] notifyNewMessage failed:', e.message)
+  }
 }
 
 router.post('/', messageLimiter, messageHourlyLimiter, async (req, res) => {
@@ -34,7 +38,7 @@ router.post('/', messageLimiter, messageHourlyLimiter, async (req, res) => {
   }
   const visitorName = typeof name === 'string' ? name.trim() : ''
   const msg = await Message.create({ name: visitorName, content: content.trim() })
-  notifyNewMessage(msg)
+  await notifyNewMessage(msg)
   res.status(201).json({ ok: true, id: msg._id })
 })
 
