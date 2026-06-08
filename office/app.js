@@ -7,6 +7,8 @@ import authRoutes from './routes/auth.js'
 import messageRoutes from './routes/messages.js'
 import pushRoutes from './routes/push.js'
 import siteRoutes from './routes/site.js'
+import visitorRoutes from './routes/visitors.js'
+import { visitorLogger } from './middleware/visitorLog.js'
 
 const app = express()
 
@@ -166,10 +168,13 @@ app.get('/', (_req, res) => {
 </html>`)
 })
 
+app.use('/api', visitorLogger)
+
 app.use('/api/auth', authRoutes)
 app.use('/api/messages', messageRoutes)
 app.use('/api/push', pushRoutes)
 app.use('/api/site', siteRoutes)
+app.use('/api/visitors', visitorRoutes)
 
 app.use((err, _req, res, _next) => {
   console.error('[error]', err)

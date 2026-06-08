@@ -9,6 +9,7 @@ const AboutPage = lazy(() => import('./pages/About'))
 const ContactPage = lazy(() => import('./pages/Contact'))
 const Login = lazy(() => import('./pages/Login'))
 const Inbox = lazy(() => import('./pages/Inbox'))
+const Visitors = lazy(() => import('./pages/Visitors'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 function RouteFallback() {
@@ -71,6 +72,14 @@ export default function App() {
                 element={
                   <RequireAuth authed={authed}>
                     <Inbox onLogout={() => setAuthed(false)} />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/visitors"
+                element={
+                  <RequireAuth authed={authed}>
+                    <Visitors />
                   </RequireAuth>
                 }
               />

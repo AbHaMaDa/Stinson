@@ -84,6 +84,11 @@ export default function Navbar({ authed }) {
           <NavLink to="/inbox" className={desktopItem}>
             Inbox<UnreadBadge count={unread} />
           </NavLink>
+          {authed && (
+            <NavLink to="/visitors" className={desktopItem}>
+              Visitors
+            </NavLink>
+          )}
         </div>
 
         <button
@@ -127,6 +132,11 @@ export default function Navbar({ authed }) {
             <NavLink to="/inbox" className={mobileItem}>
               Inbox<UnreadBadge count={unread} />
             </NavLink>
+            {authed && (
+              <NavLink to="/visitors" className={mobileItem}>
+                Visitors
+              </NavLink>
+            )}
           </div>
         </>
       )}
