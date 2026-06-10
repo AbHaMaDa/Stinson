@@ -265,36 +265,144 @@ function PlanetIcon() {
 function HangingRabbit({ count }) {
   const visible = count > 0
   return (
-    <div
-      aria-hidden="true"
-      className="absolute pointer-events-none z-30 right-3 sm:right-4 top-[calc(1.5rem+60px)] sm:top-[calc(2.5rem+90px)]"
-      style={{
-        width: '100px',
-        height: '190px',
-        transform: 'translateX(calc(100% - 35px))',
-      }}
-    >
+    <>
+      {/* Mobile: hangs under the card, paws gripping the bottom border */}
       <div
-        style={{
-          width: '100%',
-          height: '100%',
-          opacity: visible ? 1 : 0,
-          transform: visible
-            ? 'translateX(0) scale(1) rotate(0deg)'
-            : 'translateX(-32px) scale(0.85) rotate(-10deg)',
-          transformOrigin: 'left center',
-          transition:
-            'opacity 300ms ease, transform 650ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-        }}
+        aria-hidden="true"
+        className="sm:hidden absolute pointer-events-none z-30 left-1/2 bottom-0 -translate-x-1/2 translate-y-[calc(100%-18px)]"
+        style={{ width: '130px', height: '116px' }}
       >
         <div
           style={{
             width: '100%',
             height: '100%',
-            animation: visible ? 'conf-bob 3.4s ease-in-out infinite' : undefined,
+            opacity: visible ? 1 : 0,
+            transform: visible
+              ? 'translateY(0) scale(1) rotate(0deg)'
+              : 'translateY(-44px) scale(0.85) rotate(-6deg)',
+            transformOrigin: 'top center',
+            transition:
+              'opacity 300ms ease, transform 650ms cubic-bezier(0.34, 1.56, 0.64, 1)',
           }}
         >
-          <svg width="100" height="190" viewBox="0 0 100 190" xmlns="http://www.w3.org/2000/svg">
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              animation: visible ? 'conf-bob 3.4s ease-in-out infinite' : undefined,
+            }}
+          >
+            <svg width="130" height="116" viewBox="0 0 130 116" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="rbFurM" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="100%" stopColor="#fce7f3" />
+                </linearGradient>
+                <radialGradient id="rbGlowM" cx="0.5" cy="0.5" r="0.5">
+                  <stop offset="0%" stopColor="rgba(244,114,182,0.45)" />
+                  <stop offset="100%" stopColor="rgba(244,114,182,0)" />
+                </radialGradient>
+              </defs>
+
+              {/* Soft glow behind head */}
+              <circle cx="65" cy="62" r="50" fill="url(#rbGlowM)" />
+
+              {/* Left paw gripping bottom edge of card */}
+              <g>
+                <ellipse cx="42" cy="12" rx="13" ry="8" fill="url(#rbFurM)" stroke="#1e1b4b" strokeWidth="1.3" />
+                <ellipse cx="42" cy="14" rx="5.5" ry="3" fill="rgba(244,114,182,0.7)" />
+                <ellipse cx="34" cy="6" rx="2" ry="1.5" fill="rgba(244,114,182,0.85)" />
+                <ellipse cx="40" cy="4" rx="2" ry="1.5" fill="rgba(244,114,182,0.85)" />
+                <ellipse cx="46" cy="5" rx="2" ry="1.5" fill="rgba(244,114,182,0.85)" />
+                <ellipse cx="51" cy="7" rx="2" ry="1.5" fill="rgba(244,114,182,0.85)" />
+              </g>
+              {/* Right paw */}
+              <g>
+                <ellipse cx="88" cy="12" rx="13" ry="8" fill="url(#rbFurM)" stroke="#1e1b4b" strokeWidth="1.3" />
+                <ellipse cx="88" cy="14" rx="5.5" ry="3" fill="rgba(244,114,182,0.7)" />
+                <ellipse cx="80" cy="6" rx="2" ry="1.5" fill="rgba(244,114,182,0.85)" />
+                <ellipse cx="86" cy="4" rx="2" ry="1.5" fill="rgba(244,114,182,0.85)" />
+                <ellipse cx="92" cy="5" rx="2" ry="1.5" fill="rgba(244,114,182,0.85)" />
+                <ellipse cx="97" cy="7" rx="2" ry="1.5" fill="rgba(244,114,182,0.85)" />
+              </g>
+
+              {/* Head + ears (shake on count change) */}
+              <g
+                key={count}
+                style={{
+                  transformOrigin: '65px 28px',
+                  transformBox: 'view-box',
+                  animation: count > 0 ? 'conf-shake 0.85s ease-in-out' : undefined,
+                }}
+              >
+                {/* Left ear */}
+                <g transform="rotate(-12 53 46)">
+                  <ellipse cx="53" cy="38" rx="9" ry="22" fill="url(#rbFurM)" stroke="#1e1b4b" strokeWidth="1.4" />
+                  <ellipse cx="53" cy="40" rx="4" ry="16" fill="rgba(244,114,182,0.75)" />
+                </g>
+                {/* Right ear */}
+                <g transform="rotate(12 77 46)">
+                  <ellipse cx="77" cy="38" rx="9" ry="22" fill="url(#rbFurM)" stroke="#1e1b4b" strokeWidth="1.4" />
+                  <ellipse cx="77" cy="40" rx="4" ry="16" fill="rgba(244,114,182,0.75)" />
+                </g>
+
+                {/* Head */}
+                <circle cx="65" cy="74" r="24" fill="url(#rbFurM)" stroke="#1e1b4b" strokeWidth="1.6" />
+
+                {/* Happy closed eyes ^_^ */}
+                <path d="M 52 70 Q 56 74 60 70" stroke="#1e1b4b" strokeWidth="2.4" fill="none" strokeLinecap="round" />
+                <path d="M 70 70 Q 74 74 78 70" stroke="#1e1b4b" strokeWidth="2.4" fill="none" strokeLinecap="round" />
+
+                {/* Cheeks */}
+                <ellipse cx="50" cy="82" rx="3.6" ry="2.4" fill="rgba(244,114,182,0.78)" />
+                <ellipse cx="80" cy="82" rx="3.6" ry="2.4" fill="rgba(244,114,182,0.78)" />
+
+                {/* Nose */}
+                <path d="M 60 80 L 70 80 L 65 84.5 Z" fill="#ec4899" stroke="#1e1b4b" strokeWidth="1.1" strokeLinejoin="round" />
+
+                {/* Mouth */}
+                <path d="M 65 84.5 L 65 88" stroke="#1e1b4b" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M 65 88 Q 61.5 90.5 59 89.5" stroke="#1e1b4b" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                <path d="M 65 88 Q 68.5 90.5 71 89.5" stroke="#1e1b4b" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+
+                {/* Whiskers */}
+                <line x1="45" y1="80" x2="32" y2="77" stroke="rgba(30,27,75,0.55)" strokeWidth="1" strokeLinecap="round" />
+                <line x1="45" y1="84" x2="32" y2="85" stroke="rgba(30,27,75,0.55)" strokeWidth="1" strokeLinecap="round" />
+                <line x1="85" y1="80" x2="98" y2="77" stroke="rgba(30,27,75,0.55)" strokeWidth="1" strokeLinecap="round" />
+                <line x1="85" y1="84" x2="98" y2="85" stroke="rgba(30,27,75,0.55)" strokeWidth="1" strokeLinecap="round" />
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop: peeking out from the right edge of the card */}
+      <div
+        aria-hidden="true"
+        className="hidden sm:block absolute pointer-events-none z-30 right-4 top-[calc(2.5rem+90px)] translate-x-[calc(100%-35px)]"
+        style={{ width: '100px', height: '190px' }}
+      >
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            opacity: visible ? 1 : 0,
+            transform: visible
+              ? 'translateX(0) scale(1) rotate(0deg)'
+              : 'translateX(-32px) scale(0.85) rotate(-10deg)',
+            transformOrigin: 'left center',
+            transition:
+              'opacity 300ms ease, transform 650ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              animation: visible ? 'conf-bob 3.4s ease-in-out infinite' : undefined,
+            }}
+          >
+            <svg width="100" height="190" viewBox="0 0 100 190" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="rbFur" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#ffffff" />
@@ -376,6 +484,7 @@ function HangingRabbit({ count }) {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
