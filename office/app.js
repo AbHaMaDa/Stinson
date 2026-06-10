@@ -12,6 +12,7 @@ import visitorRoutes from './routes/visitors.js'
 import confessionRoutes from './routes/confession.js'
 import answerRoutes from './routes/answers.js'
 import { visitorLogger } from './middleware/visitorLog.js'
+import { ipBlock } from './middleware/ipBlock.js'
 
 const app = express()
 
@@ -171,6 +172,7 @@ app.get('/', (_req, res) => {
 </html>`)
 })
 
+app.use('/api', ipBlock)
 app.use('/api', visitorLogger)
 
 app.use('/api/auth', authRoutes)

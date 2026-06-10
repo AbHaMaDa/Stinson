@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import { SiteSettings, SITE_SETTINGS_ID } from '../models/SiteSettings.js'
+import { invalidateBlockCache } from '../middleware/ipBlock.js'
 
 const router = Router()
 
@@ -54,6 +55,29 @@ router.delete('/avatar', requireAuth, async (_req, res) => {
     { $unset: { avatar: '' } }
   )
   res.json({ ok: true })
+})
+
+router.get('/blocked-ips', requireAuth, async (req, res) => {
+  const doc = await SiteSettings.findById(SITE_SETTINGS_ID).select('blockedIps').lean()
+  res.json({ blockedIps: doc?.blockedIps || [], yourIp: req.ip })
+})
+
+router.put('/blocked-ips', requireAuth, async (req, res) => {
+  const { blockedIps } = req.body || {}
+  if (!Array.isArray(blockedIps) || !blockedIps.every((s) => typeof s === 'string')) {
+    return res.status(400).json({ error: 'blockedIps must be a string array' })
+  }
+  const cleaned = [...new Set(blockedIps.map((s) => s.trim()).filter(Boolean))]
+  if (cleaned.includes(req.ip)) {
+    return res.status(400).json({ error: "can't block your own IP" })
+  }
+  await SiteSettings.findByIdAndUpdate(
+    SITE_SETTINGS_ID,
+    { $set: { blockedIps: cleaned } },
+    { upsert: true }
+  )
+  invalidateBlockCache()
+  res.json({ blockedIps: cleaned, yourIp: req.ip })
 })
 
 export default router

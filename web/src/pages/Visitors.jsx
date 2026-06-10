@@ -11,6 +11,7 @@ import {
   Lock,
   Check,
   X,
+  Ban,
 } from 'lucide-react'
 import { api } from '../lib/api'
 import ConfirmModal from '../components/ConfirmModal'
@@ -66,6 +67,9 @@ export default function Visitors() {
   const [savingConfession, setSavingConfession] = useState(false)
   const [questionDraft, setQuestionDraft] = useState('')
   const [revealDraft, setRevealDraft] = useState('')
+  const [blockedIps, setBlockedIps] = useState([])
+  const [savingBlocked, setSavingBlocked] = useState(false)
+  const [yourIp, setYourIp] = useState('')
 
   useDocumentTitle('Visitors')
 
@@ -73,9 +77,10 @@ export default function Visitors() {
     setLoading(true)
     setError('')
     try {
-      const [vRes, cRes] = await Promise.all([
+      const [vRes, cRes, bRes] = await Promise.all([
         api.get('/visitors'),
         api.get('/confession/settings'),
+        api.get('/site/blocked-ips'),
       ])
       setVisitors(vRes.data.visitors)
       setStats(vRes.data.stats)
@@ -88,6 +93,8 @@ export default function Visitors() {
       setConfession(conf)
       setQuestionDraft(conf.question)
       setRevealDraft(conf.yesReveal)
+      setBlockedIps(bRes.data.blockedIps || [])
+      setYourIp(bRes.data.yourIp || '')
     } catch (err) {
       setError(err?.response?.data?.error || 'failed to load visitors')
     } finally {
@@ -100,6 +107,7 @@ export default function Visitors() {
   }, [])
 
   const allowedSet = useMemo(() => new Set(confession.allowedIps), [confession.allowedIps])
+  const blockedSet = useMemo(() => new Set(blockedIps), [blockedIps])
 
   const saveConfession = async (patch) => {
     const prev = confession
@@ -138,6 +146,29 @@ export default function Visitors() {
       ? confession.allowedIps.filter((x) => x !== ip)
       : [...confession.allowedIps, ip]
     saveConfession({ allowedIps: next })
+  }
+
+  const saveBlocked = async (next) => {
+    const prev = blockedIps
+    setBlockedIps(next)
+    setSavingBlocked(true)
+    try {
+      const { data } = await api.put('/site/blocked-ips', { blockedIps: next })
+      setBlockedIps(data.blockedIps || [])
+      if (data.yourIp) setYourIp(data.yourIp)
+    } catch (err) {
+      setBlockedIps(prev)
+      setError(err?.response?.data?.error || 'failed to save blocked IPs')
+    } finally {
+      setSavingBlocked(false)
+    }
+  }
+
+  const toggleBlocked = (ip) => {
+    const next = blockedSet.has(ip)
+      ? blockedIps.filter((x) => x !== ip)
+      : [...blockedIps, ip]
+    saveBlocked(next)
   }
 
   const filtered = useMemo(() => {
@@ -328,6 +359,43 @@ export default function Visitors() {
         </div>
       </div>
 
+      <div className="rounded-xl bg-white/5 border border-white/10 p-4 mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
+              <Ban className="w-4 h-4 text-red-300" /> Blocked IPs
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              These IPs get a 403 on every API request. {blockedIps.length} blocked.
+            </p>
+          </div>
+          {savingBlocked && <span className="text-xs text-slate-400">Saving...</span>}
+        </div>
+        {blockedIps.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {blockedIps.map((ip) => (
+              <span
+                key={ip}
+                className="inline-flex items-center gap-1.5 pl-2 pr-1 py-0.5 rounded-md bg-red-500/15 border border-red-500/30 text-red-200 text-xs font-mono"
+              >
+                {ip}
+                <button
+                  onClick={() => toggleBlocked(ip)}
+                  disabled={savingBlocked}
+                  className="p-0.5 rounded hover:bg-red-500/20 text-red-200 transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  aria-label={`Unblock ${ip}`}
+                  title="Unblock"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-500">Nobody blocked. Tap the ban icon next to a visitor below.</p>
+        )}
+      </div>
+
       <label className="relative block mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
@@ -417,6 +485,32 @@ export default function Visitors() {
                       )}
                     </button>
                   )}
+                  {(() => {
+                    const isSelf = v._id === yourIp
+                    return (
+                      <button
+                        onClick={() => toggleBlocked(v._id)}
+                        disabled={savingBlocked || isSelf}
+                        className={`p-2 rounded-lg transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
+                          blockedSet.has(v._id)
+                            ? 'bg-red-500/20 text-red-200 hover:bg-red-500/30'
+                            : 'hover:bg-red-500/15 text-slate-400 hover:text-red-300'
+                        }`}
+                        aria-label={
+                          isSelf
+                            ? "Can't block your own IP"
+                            : blockedSet.has(v._id) ? 'Unblock' : 'Block'
+                        }
+                        title={
+                          isSelf
+                            ? "That's you — can't block your own IP"
+                            : blockedSet.has(v._id) ? 'Blocked — click to unblock' : 'Block this IP'
+                        }
+                      >
+                        <Ban className="w-4 h-4" />
+                      </button>
+                    )
+                  })()}
                   <button
                     onClick={() => setDeleteTarget(v)}
                     className="p-2 rounded-lg hover:bg-red-500/20 text-red-300 transition-colors duration-200 cursor-pointer"
