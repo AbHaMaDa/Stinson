@@ -12,6 +12,7 @@ import {
   Check,
   X,
   Ban,
+  BarChart3,
 } from 'lucide-react'
 import { api } from '../lib/api'
 import ConfirmModal from '../components/ConfirmModal'
@@ -43,6 +44,12 @@ function formatLocation(v) {
   return parts.join(', ') || 'Unknown'
 }
 
+function answerPillClass(v) {
+  if (v === 'yes') return 'bg-emerald-500/15 border-emerald-500/30 text-emerald-200'
+  if (v === 'no') return 'bg-rose-500/15 border-rose-500/30 text-rose-200'
+  return 'bg-white/5 border-white/10 text-slate-500'
+}
+
 const CONFESSION_MODES = [
   { value: 'hidden', label: 'Hidden', icon: EyeOff, hint: 'No one sees the tab.' },
   { value: 'public', label: 'Public', icon: Eye, hint: 'Everyone sees the tab.' },
@@ -70,6 +77,12 @@ export default function Visitors() {
   const [blockedIps, setBlockedIps] = useState([])
   const [savingBlocked, setSavingBlocked] = useState(false)
   const [yourIp, setYourIp] = useState('')
+  const [confessionAnswers, setConfessionAnswers] = useState([])
+  const [confessionTally, setConfessionTally] = useState({
+    q1: { yes: 0, no: 0 },
+    q2: { yes: 0, no: 0 },
+  })
+  const [answersOpen, setAnswersOpen] = useState(false)
 
   useDocumentTitle('Visitors')
 
@@ -77,10 +90,11 @@ export default function Visitors() {
     setLoading(true)
     setError('')
     try {
-      const [vRes, cRes, bRes] = await Promise.all([
+      const [vRes, cRes, bRes, aRes] = await Promise.all([
         api.get('/visitors'),
         api.get('/confession/settings'),
         api.get('/site/blocked-ips'),
+        api.get('/confession/answers'),
       ])
       setVisitors(vRes.data.visitors)
       setStats(vRes.data.stats)
@@ -95,6 +109,10 @@ export default function Visitors() {
       setRevealDraft(conf.yesReveal)
       setBlockedIps(bRes.data.blockedIps || [])
       setYourIp(bRes.data.yourIp || '')
+      setConfessionAnswers(aRes.data.items || [])
+      setConfessionTally(
+        aRes.data.tally || { q1: { yes: 0, no: 0 }, q2: { yes: 0, no: 0 } }
+      )
     } catch (err) {
       setError(err?.response?.data?.error || 'failed to load visitors')
     } finally {
@@ -357,6 +375,85 @@ export default function Visitors() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="rounded-xl bg-white/5 border border-white/10 p-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
+              <BarChart3 className="w-4 h-4 text-pink-300" /> Confession answers
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {confessionAnswers.length}{' '}
+              {confessionAnswers.length === 1 ? 'visitor has' : 'visitors have'} responded.
+            </p>
+          </div>
+          {confessionAnswers.length > 0 && (
+            <button
+              onClick={() => setAnswersOpen((o) => !o)}
+              className="text-xs text-slate-300 hover:text-white px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 transition-colors duration-200 cursor-pointer"
+            >
+              {answersOpen ? 'Hide list' : 'Show list'}
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-lg bg-white/5 border border-white/10 p-3">
+            <p className="text-[11px] text-slate-400 uppercase tracking-wider mb-1.5">
+              Q1 — main
+            </p>
+            <div className="flex gap-1.5 text-xs">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-200">
+                <Check className="w-3 h-3" /> {confessionTally.q1.yes}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-200">
+                <X className="w-3 h-3" /> {confessionTally.q1.no}
+              </span>
+            </div>
+          </div>
+          <div className="rounded-lg bg-white/5 border border-white/10 p-3">
+            <p className="text-[11px] text-slate-400 uppercase tracking-wider mb-1.5">
+              Q2 — reveal
+            </p>
+            <div className="flex gap-1.5 text-xs">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-200">
+                <Check className="w-3 h-3" /> {confessionTally.q2.yes}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-200">
+                <X className="w-3 h-3" /> {confessionTally.q2.no}
+              </span>
+            </div>
+          </div>
+        </div>
+        {answersOpen && confessionAnswers.length > 0 && (
+          <div className="mt-3 space-y-1.5">
+            {confessionAnswers.map((a) => (
+              <div
+                key={a._id}
+                className="flex items-center justify-between gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs"
+              >
+                <span className="font-mono text-slate-200 truncate">{a._id}</span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className={`px-1.5 py-0.5 rounded border ${answerPillClass(a.q1)}`}>
+                    Q1: {a.q1 || '—'}
+                  </span>
+                  {a.q1NoCount > 0 && (
+                    <span
+                      className="px-1.5 py-0.5 rounded border bg-amber-500/15 border-amber-500/30 text-amber-200"
+                      title={`Clicked No ${a.q1NoCount} time${a.q1NoCount === 1 ? '' : 's'} before giving up`}
+                    >
+                      {a.q1NoCount}× nope
+                    </span>
+                  )}
+                  <span className={`px-1.5 py-0.5 rounded border ${answerPillClass(a.q2)}`}>
+                    Q2: {a.q2 || '—'}
+                  </span>
+                  <span className="text-slate-500">{timeAgo(a.updatedAt)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl bg-white/5 border border-white/10 p-4 mb-6">

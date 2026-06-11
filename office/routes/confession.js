@@ -1,11 +1,14 @@
 import { Router } from 'express'
 import { SiteSettings, SITE_SETTINGS_ID } from '../models/SiteSettings.js'
+import { ConfessionAnswer } from '../models/ConfessionAnswer.js'
 import { requireAuth } from '../middleware/auth.js'
 import { isAdmin } from '../lib/adminCheck.js'
 
 const router = Router()
 
 const VALID_MODES = new Set(['hidden', 'public', 'allowlist'])
+const VALID_Q = new Set(['q1', 'q2'])
+const VALID_ANSWER = new Set(['yes', 'no'])
 
 function defaultConfession() {
   return { mode: 'hidden', allowedIps: [], question: '', yesReveal: '' }
@@ -35,6 +38,49 @@ router.get('/access', async (req, res) => {
     question: conf.question,
     yesReveal: conf.yesReveal,
   })
+})
+
+router.post('/answer', async (req, res) => {
+  const { q, answer } = req.body || {}
+  if (!VALID_Q.has(q)) return res.status(400).json({ error: 'q must be q1 or q2' })
+  if (!VALID_ANSWER.has(answer)) return res.status(400).json({ error: 'answer must be yes or no' })
+
+  const ip = req.ip || ''
+  if (!ip) return res.status(400).json({ error: 'no ip' })
+
+  const conf = await getConfession()
+  if (!isAdmin(req) && !isVisibleTo(conf, ip)) {
+    return res.status(403).json({ error: 'forbidden' })
+  }
+
+  const now = new Date()
+  const update = {
+    $set: {
+      [q]: answer,
+      [`${q}At`]: now,
+      userAgent: req.get('user-agent') || '',
+    },
+  }
+  if (q === 'q1' && answer === 'no') {
+    update.$inc = { q1NoCount: 1 }
+  }
+  await ConfessionAnswer.findByIdAndUpdate(ip, update, { upsert: true })
+  res.json({ ok: true })
+})
+
+router.get('/answers', requireAuth, async (_req, res) => {
+  const items = await ConfessionAnswer.find().sort({ updatedAt: -1 }).lean()
+  const tally = items.reduce(
+    (acc, it) => {
+      if (it.q1 === 'yes') acc.q1.yes++
+      else if (it.q1 === 'no') acc.q1.no++
+      if (it.q2 === 'yes') acc.q2.yes++
+      else if (it.q2 === 'no') acc.q2.no++
+      return acc
+    },
+    { q1: { yes: 0, no: 0 }, q2: { yes: 0, no: 0 } }
+  )
+  res.json({ items, tally })
 })
 
 router.get('/settings', requireAuth, async (_req, res) => {

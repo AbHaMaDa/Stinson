@@ -9,6 +9,10 @@ const DEFAULT_YES_REVEAL = "Greeeaaaaaaaat!, but before that do u know the  plan
 const FINAL_YES = 'aaaawesooome!, now u just let me know'
 const FINAL_NO = 'yeaah who cares, now u just let me know'
 
+function recordAnswer(q, answer) {
+  api.post('/confession/answer', { q, answer }).catch(() => {})
+}
+
 const STYLES = `
 @keyframes conf-twinkle {
   0%, 100% { opacity: 0.2; transform: scale(0.6); }
@@ -784,14 +788,23 @@ function ConfessionGame({ question, yesReveal }) {
             {phase === 'q1' && (
               <Phase1Runaway
                 question={question || DEFAULT_QUESTION}
-                onYes={() => setPhase('q2')}
-                onNope={() => setNopeCount((n) => n + 1)}
+                onYes={() => {
+                  recordAnswer('q1', 'yes')
+                  setPhase('q2')
+                }}
+                onNope={() => {
+                  recordAnswer('q1', 'no')
+                  setNopeCount((n) => n + 1)
+                }}
               />
             )}
             {phase === 'q2' && (
               <Phase2FollowUp
                 text={yesReveal || DEFAULT_YES_REVEAL}
-                onAnswer={(isYes) => setPhase(isYes ? 'finalYes' : 'finalNo')}
+                onAnswer={(isYes) => {
+                  recordAnswer('q2', isYes ? 'yes' : 'no')
+                  setPhase(isYes ? 'finalYes' : 'finalNo')
+                }}
               />
             )}
             {phase === 'finalYes' && <PhaseFinal variant="yes" />}
