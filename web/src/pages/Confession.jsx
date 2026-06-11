@@ -4,7 +4,6 @@ import { api } from '../lib/api'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import NotFound from './NotFound'
 
-const DEFAULT_QUESTION = "Hey, this might be a little random, but I think you're interesting and I'd like to get to know you better. Would you be interested in going out sometime?"
 const DEFAULT_YES_REVEAL = "Greeeaaaaaaaat!, but before that do u know the  planets names of our solar system right?"
 const FINAL_YES = 'aaaawesooome!, now u just let me know'
 const FINAL_NO = 'yeaah who cares, now u just let me know'
@@ -787,7 +786,7 @@ function ConfessionGame({ question, yesReveal }) {
           >
             {phase === 'q1' && (
               <Phase1Runaway
-                question={question || DEFAULT_QUESTION}
+                question={question}
                 onYes={() => {
                   recordAnswer('q1', 'yes')
                   setPhase('q2')

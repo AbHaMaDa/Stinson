@@ -68,10 +68,12 @@ export default function Visitors() {
   const [confession, setConfession] = useState({
     mode: 'hidden',
     allowedIps: [],
+    name: '',
     question: '',
     yesReveal: '',
   })
   const [savingConfession, setSavingConfession] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
   const [questionDraft, setQuestionDraft] = useState('')
   const [revealDraft, setRevealDraft] = useState('')
   const [blockedIps, setBlockedIps] = useState([])
@@ -101,10 +103,12 @@ export default function Visitors() {
       const conf = {
         mode: cRes.data.mode || 'hidden',
         allowedIps: cRes.data.allowedIps || [],
+        name: cRes.data.name || '',
         question: cRes.data.question || '',
         yesReveal: cRes.data.yesReveal || '',
       }
       setConfession(conf)
+      setNameDraft(conf.name)
       setQuestionDraft(conf.question)
       setRevealDraft(conf.yesReveal)
       setBlockedIps(bRes.data.blockedIps || [])
@@ -137,6 +141,7 @@ export default function Visitors() {
       setConfession({
         mode: data.mode || 'hidden',
         allowedIps: data.allowedIps || [],
+        name: data.name || '',
         question: data.question || '',
         yesReveal: data.yesReveal || '',
       })
@@ -148,6 +153,12 @@ export default function Visitors() {
     }
   }
 
+  const saveName = () => {
+    const trimmed = nameDraft.trim()
+    if (trimmed !== confession.name) {
+      saveConfession({ name: trimmed })
+    }
+  }
   const saveQuestion = () => {
     if (questionDraft !== confession.question) {
       saveConfession({ question: questionDraft })
@@ -291,6 +302,24 @@ export default function Visitors() {
 
         <div>
           <label className="text-xs text-slate-400 font-medium block mb-1">
+            Name
+          </label>
+          <input
+            type="text"
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onBlur={saveName}
+            maxLength={80}
+            placeholder="Sarah"
+            className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder:text-slate-500 px-3 py-2 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-colors duration-200"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">
+            Replaces <code className="px-1 rounded bg-white/5 text-slate-300">{'{name}'}</code> in the question / reveal.
+          </p>
+        </div>
+
+        <div>
+          <label className="text-xs text-slate-400 font-medium block mb-1">
             Question
           </label>
           <textarea
@@ -299,7 +328,7 @@ export default function Visitors() {
             onBlur={saveQuestion}
             maxLength={300}
             rows={2}
-            placeholder="Do you like me?"
+            placeholder="Hey {name}, do you like me?"
             className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder:text-slate-500 px-3 py-2 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-colors duration-200 resize-y"
           />
         </div>

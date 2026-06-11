@@ -10,13 +10,25 @@ const VALID_MODES = new Set(['hidden', 'public', 'allowlist'])
 const VALID_Q = new Set(['q1', 'q2'])
 const VALID_ANSWER = new Set(['yes', 'no'])
 
+const SERVER_DEFAULT_QUESTION =
+  "Hey {name}, this might be a little random, but I think you're interesting and I'd like to get to know you better. Would you be interested in going out sometime?"
+
 function defaultConfession() {
-  return { mode: 'hidden', allowedIps: [], question: '', yesReveal: '' }
+  return { mode: 'hidden', allowedIps: [], name: '', question: '', yesReveal: '' }
 }
 
 async function getConfession() {
   const doc = await SiteSettings.findById(SITE_SETTINGS_ID).lean()
   return { ...defaultConfession(), ...(doc?.confession || {}) }
+}
+
+function interpolate(template, name) {
+  return template
+    .replace(/\{name\}/g, name || '')
+    .replace(/\s+,/g, ',')
+    .replace(/\s+\./g, '.')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim()
 }
 
 function isVisibleTo(conf, ip) {
@@ -32,11 +44,13 @@ router.get('/access', async (req, res) => {
   const admin = isAdmin(req)
   const visible = admin || isVisibleTo(conf, req.ip || '')
   if (!visible) return res.json({ visible: false })
+  const question = interpolate(conf.question || SERVER_DEFAULT_QUESTION, conf.name)
+  const yesReveal = interpolate(conf.yesReveal, conf.name)
   res.json({
     visible: true,
     admin,
-    question: conf.question,
-    yesReveal: conf.yesReveal,
+    question,
+    yesReveal,
   })
 })
 
@@ -89,7 +103,7 @@ router.get('/settings', requireAuth, async (_req, res) => {
 })
 
 router.put('/settings', requireAuth, async (req, res) => {
-  const { mode, allowedIps, question, yesReveal } = req.body || {}
+  const { mode, allowedIps, name, question, yesReveal } = req.body || {}
   const update = {}
   if (mode !== undefined) {
     if (!VALID_MODES.has(mode)) {
@@ -102,6 +116,12 @@ router.put('/settings', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'allowedIps must be string array' })
     }
     update['confession.allowedIps'] = [...new Set(allowedIps)]
+  }
+  if (name !== undefined) {
+    if (typeof name !== 'string' || name.length > 80) {
+      return res.status(400).json({ error: 'name must be a string up to 80 chars' })
+    }
+    update['confession.name'] = name.trim()
   }
   if (question !== undefined) {
     if (typeof question !== 'string' || question.length > 300) {
