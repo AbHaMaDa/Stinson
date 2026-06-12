@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 const confessionAnswerSchema = new mongoose.Schema(
   {
     _id: { type: String },
+    ip: { type: String, default: '' },
     q1: { type: String, default: null },
     q2: { type: String, default: null },
     q1At: { type: Date, default: null },

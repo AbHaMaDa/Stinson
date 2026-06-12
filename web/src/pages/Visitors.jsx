@@ -13,6 +13,8 @@ import {
   X,
   Ban,
   BarChart3,
+  Smartphone,
+  ChevronDown,
 } from 'lucide-react'
 import { api } from '../lib/api'
 import ConfirmModal from '../components/ConfirmModal'
@@ -50,6 +52,10 @@ function answerPillClass(v) {
   return 'bg-white/5 border-white/10 text-slate-500'
 }
 
+function shortCid(cid) {
+  return cid ? cid.slice(0, 8) : ''
+}
+
 const CONFESSION_MODES = [
   { value: 'hidden', label: 'Hidden', icon: EyeOff, hint: 'No one sees the tab.' },
   { value: 'public', label: 'Public', icon: Eye, hint: 'Everyone sees the tab.' },
@@ -85,6 +91,7 @@ export default function Visitors() {
     q2: { yes: 0, no: 0 },
   })
   const [answersOpen, setAnswersOpen] = useState(false)
+  const [expandedIps, setExpandedIps] = useState(() => new Set())
 
   useDocumentTitle('Visitors')
 
@@ -461,7 +468,17 @@ export default function Visitors() {
                 key={a._id}
                 className="flex items-center justify-between gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs"
               >
-                <span className="font-mono text-slate-200 truncate">{a._id}</span>
+                <div className="min-w-0 flex flex-col">
+                  <span className="font-mono text-slate-200 truncate" title={a._id}>
+                    {a.ip || '—'}
+                  </span>
+                  <span
+                    className="font-mono text-[10px] text-slate-500 inline-flex items-center gap-1"
+                    title={`device ${a._id}`}
+                  >
+                    <Smartphone className="w-2.5 h-2.5" /> {shortCid(a._id)}
+                  </span>
+                </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span className={`px-1.5 py-0.5 rounded border ${answerPillClass(a.q1)}`}>
                     Q1: {a.q1 || '—'}
@@ -577,6 +594,31 @@ export default function Visitors() {
                     <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-cyan-400/20 text-cyan-200 border border-cyan-400/30">
                       {v.hits} hit{v.hits === 1 ? '' : 's'}
                     </span>
+                    {v.devices && v.devices.length > 0 && (
+                      <button
+                        onClick={() =>
+                          setExpandedIps((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(v._id)) next.delete(v._id)
+                            else next.add(v._id)
+                            return next
+                          })
+                        }
+                        className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border transition-colors duration-200 cursor-pointer ${
+                          expandedIps.has(v._id)
+                            ? 'bg-amber-400/25 text-amber-100 border-amber-400/40'
+                            : 'bg-amber-400/15 text-amber-200 border-amber-400/30 hover:bg-amber-400/25'
+                        }`}
+                        title={`${v.devices.length} device${v.devices.length === 1 ? '' : 's'} behind this IP`}
+                      >
+                        <Smartphone className="w-3 h-3" /> {v.devices.length}
+                        <ChevronDown
+                          className={`w-3 h-3 transition-transform duration-200 ${
+                            expandedIps.has(v._id) ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
+                    )}
                   </div>
                   <p className="text-slate-300 text-xs mt-1">{formatLocation(v)}</p>
                   <p className="text-slate-400 text-xs mt-1">
@@ -589,6 +631,42 @@ export default function Visitors() {
                     <p className="text-slate-500 text-[11px] mt-1 truncate" title={v.userAgent}>
                       {v.userAgent}
                     </p>
+                  )}
+                  {expandedIps.has(v._id) && v.devices && v.devices.length > 0 && (
+                    <div className="mt-2.5 space-y-1.5">
+                      {v.devices.map((d) => (
+                        <div
+                          key={d._id}
+                          className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2 text-[11px] space-y-1"
+                        >
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Smartphone className="w-3 h-3 text-amber-300 shrink-0" />
+                            <span className="font-mono text-slate-200" title={d._id}>
+                              {shortCid(d._id)}
+                            </span>
+                            <span className="text-slate-500">·</span>
+                            <span className="text-slate-400">
+                              {d.hits} hit{d.hits === 1 ? '' : 's'}
+                            </span>
+                            <span className="text-slate-500">·</span>
+                            <span className="text-slate-400">{timeAgo(d.lastSeen)}</span>
+                            {d.fingerprint && (
+                              <span
+                                className="font-mono text-slate-500 truncate"
+                                title={`fingerprint: ${d.fingerprint}`}
+                              >
+                                fp:{d.fingerprint.slice(0, 6)}
+                              </span>
+                            )}
+                          </div>
+                          {d.userAgent && (
+                            <p className="text-slate-500 truncate" title={d.userAgent}>
+                              {d.userAgent}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">

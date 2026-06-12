@@ -3,6 +3,7 @@ import { SiteSettings, SITE_SETTINGS_ID } from '../models/SiteSettings.js'
 import { ConfessionAnswer } from '../models/ConfessionAnswer.js'
 import { requireAuth } from '../middleware/auth.js'
 import { isAdmin } from '../lib/adminCheck.js'
+import { ensureClientId } from '../lib/clientId.js'
 
 const router = Router()
 
@@ -60,7 +61,8 @@ router.post('/answer', async (req, res) => {
   if (!VALID_ANSWER.has(answer)) return res.status(400).json({ error: 'answer must be yes or no' })
 
   const ip = req.ip || ''
-  if (!ip) return res.status(400).json({ error: 'no ip' })
+  const cid = ensureClientId(req, res)
+  if (!cid) return res.status(400).json({ error: 'no client id' })
 
   const conf = await getConfession()
   if (!isAdmin(req) && !isVisibleTo(conf, ip)) {
@@ -70,6 +72,7 @@ router.post('/answer', async (req, res) => {
   const now = new Date()
   const update = {
     $set: {
+      ip,
       [q]: answer,
       [`${q}At`]: now,
       userAgent: req.get('user-agent') || '',
@@ -78,7 +81,7 @@ router.post('/answer', async (req, res) => {
   if (q === 'q1' && answer === 'no') {
     update.$inc = { q1NoCount: 1 }
   }
-  await ConfessionAnswer.findByIdAndUpdate(ip, update, { upsert: true })
+  await ConfessionAnswer.findByIdAndUpdate(cid, update, { upsert: true })
   res.json({ ok: true })
 })
 
