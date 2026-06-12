@@ -52,6 +52,7 @@ async function logDevice(cid, info) {
 
 export function visitorLogger(req, res, next) {
   if (shouldSkip(req.path)) return next()
+  if (req.cookies?.[AUTH_COOKIE_NAME]) return next()
   const cid = ensureClientId(req, res)
   const ip = req.ip || 'unknown'
   const info = {
@@ -62,7 +63,7 @@ export function visitorLogger(req, res, next) {
     referer: req.get('referer') || '',
     path: (req.baseUrl || '') + req.path,
     method: req.method,
-    isAdmin: !!req.cookies?.[AUTH_COOKIE_NAME],
+    isAdmin: false,
   }
   runInBackground(logVisit(ip, info), 'visitor-log')
   runInBackground(logDevice(cid, info), 'device-log')

@@ -30,12 +30,13 @@ router.get('/', requireAuth, async (req, res) => {
 router.delete('/:ip', requireAuth, async (req, res) => {
   const deleted = await Visitor.findByIdAndDelete(req.params.ip)
   if (!deleted) return res.status(404).json({ error: 'not found' })
+  await Device.deleteMany({ ip: req.params.ip })
   res.json({ ok: true })
 })
 
 router.delete('/', requireAuth, async (_req, res) => {
-  const r = await Visitor.deleteMany({})
-  res.json({ ok: true, deleted: r.deletedCount })
+  const [v, d] = await Promise.all([Visitor.deleteMany({}), Device.deleteMany({})])
+  res.json({ ok: true, deleted: v.deletedCount, devicesDeleted: d.deletedCount })
 })
 
 export default router
