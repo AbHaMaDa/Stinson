@@ -36,7 +36,11 @@ router.post('/login', loginLimiter, async (req, res) => {
 })
 
 router.post('/logout', (req, res) => {
-  res.clearCookie(process.env.COOKIE_NAME || 'stinson_token')
+  res.clearCookie(process.env.COOKIE_NAME || 'stinson_token', {
+    httpOnly: true,
+    sameSite: isProd ? 'none' : 'lax',
+    secure: isProd,
+  })
   res.json({ ok: true })
 })
 

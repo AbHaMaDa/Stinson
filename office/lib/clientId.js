@@ -12,6 +12,20 @@ const cookieOptions = {
   path: '/',
 }
 
+export function softFingerprint(req) {
+  const ua = req.get('user-agent') || ''
+  const lang = req.get('accept-language') || ''
+  const enc = req.get('accept-encoding') || ''
+  const ip = req.ip || ''
+  return crypto.createHash('sha256').update(`${ip}|${ua}|${lang}|${enc}`).digest('hex').slice(0, 16)
+}
+
+function deriveCid(req) {
+  const fp = softFingerprint(req)
+  const salt = process.env.JWT_SECRET || 'stinson-cid-salt'
+  return crypto.createHash('sha256').update(`${fp}|${salt}`).digest('hex').slice(0, 32)
+}
+
 export function ensureClientId(req, res) {
   if (req.cid) return req.cid
   const existing = req.cookies?.[COOKIE_NAME]
@@ -19,16 +33,8 @@ export function ensureClientId(req, res) {
     req.cid = existing
     return existing
   }
-  const cid = crypto.randomUUID()
+  const cid = deriveCid(req)
   res.cookie(COOKIE_NAME, cid, cookieOptions)
   req.cid = cid
   return cid
-}
-
-export function softFingerprint(req) {
-  const ua = req.get('user-agent') || ''
-  const lang = req.get('accept-language') || ''
-  const enc = req.get('accept-encoding') || ''
-  const ip = req.ip || ''
-  return crypto.createHash('sha256').update(`${ip}|${ua}|${lang}|${enc}`).digest('hex').slice(0, 16)
 }
