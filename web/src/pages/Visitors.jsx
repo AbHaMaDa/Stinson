@@ -56,6 +56,22 @@ function shortCid(cid) {
   return cid ? cid.slice(0, 8) : ''
 }
 
+const STORY_STEP_META = {
+  A: { label: 'A', cls: 'bg-pink-500/15 border-pink-500/30 text-pink-200', title: 'Picked A' },
+  B: { label: 'B', cls: 'bg-purple-500/15 border-purple-500/30 text-purple-200', title: 'Picked B' },
+  C: { label: 'C', cls: 'bg-indigo-500/15 border-indigo-500/30 text-indigo-200', title: 'Picked C' },
+  gate: { label: '✦ gate', cls: 'bg-amber-500/15 border-amber-500/30 text-amber-200', title: 'Passed through the gate' },
+  done: { label: '✓ done', cls: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-200', title: 'Finished the reveal' },
+}
+
+function describePath(path) {
+  if (!path || path.length === 0) return 'never started the story'
+  const choices = path.filter((s) => s === 'A' || s === 'B' || s === 'C')
+  if (path.includes('done')) return `finished story (${choices.join('')})`
+  if (path.includes('gate')) return `reached the reveal (${choices.join('')})`
+  return `stopped at step ${choices.length} (${choices.join('')})`
+}
+
 const CONFESSION_MODES = [
   { value: 'hidden', label: 'Hidden', icon: EyeOff, hint: 'No one sees the tab.' },
   { value: 'public', label: 'Public', icon: Eye, hint: 'Everyone sees the tab.' },
@@ -466,35 +482,63 @@ export default function Visitors() {
             {confessionAnswers.map((a) => (
               <div
                 key={a._id}
-                className="flex items-center justify-between gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs"
+                className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs space-y-1.5"
               >
-                <div className="min-w-0 flex flex-col">
-                  <span className="font-mono text-slate-200 truncate" title={a._id}>
-                    {a.ip || '—'}
-                  </span>
-                  <span
-                    className="font-mono text-[10px] text-slate-500 inline-flex items-center gap-1"
-                    title={`device ${a._id}`}
-                  >
-                    <Smartphone className="w-2.5 h-2.5" /> {shortCid(a._id)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className={`px-1.5 py-0.5 rounded border ${answerPillClass(a.q1)}`}>
-                    Q1: {a.q1 || '—'}
-                  </span>
-                  {a.q1NoCount > 0 && (
-                    <span
-                      className="px-1.5 py-0.5 rounded border bg-amber-500/15 border-amber-500/30 text-amber-200"
-                      title={`Clicked No ${a.q1NoCount} time${a.q1NoCount === 1 ? '' : 's'} before giving up`}
-                    >
-                      {a.q1NoCount}× nope
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex flex-col">
+                    <span className="font-mono text-slate-200 truncate" title={a._id}>
+                      {a.ip || '—'}
                     </span>
+                    <span
+                      className="font-mono text-[10px] text-slate-500 inline-flex items-center gap-1"
+                      title={`device ${a._id}`}
+                    >
+                      <Smartphone className="w-2.5 h-2.5" /> {shortCid(a._id)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                    <span className={`px-1.5 py-0.5 rounded border ${answerPillClass(a.q1)}`}>
+                      Q1: {a.q1 || '—'}
+                    </span>
+                    {a.q1NoCount > 0 && (
+                      <span
+                        className="px-1.5 py-0.5 rounded border bg-amber-500/15 border-amber-500/30 text-amber-200"
+                        title={`Clicked No ${a.q1NoCount} time${a.q1NoCount === 1 ? '' : 's'} before giving up`}
+                      >
+                        {a.q1NoCount}× nope
+                      </span>
+                    )}
+                    <span className={`px-1.5 py-0.5 rounded border ${answerPillClass(a.q2)}`}>
+                      Q2: {a.q2 || '—'}
+                    </span>
+                    <span className="text-slate-500">{timeAgo(a.updatedAt)}</span>
+                  </div>
+                </div>
+                <div
+                  className="flex items-center gap-1 flex-wrap text-[10px]"
+                  title={describePath(a.storyPath)}
+                >
+                  <span className="text-slate-500 uppercase tracking-wider mr-1">story</span>
+                  {(!a.storyPath || a.storyPath.length === 0) ? (
+                    <span className="text-slate-500 italic">not started</span>
+                  ) : (
+                    a.storyPath.map((s, i) => {
+                      const meta = STORY_STEP_META[s] || {
+                        label: s,
+                        cls: 'bg-white/5 border-white/10 text-slate-400',
+                        title: s,
+                      }
+                      return (
+                        <span
+                          key={i}
+                          className={`px-1.5 py-0.5 rounded border ${meta.cls}`}
+                          title={meta.title}
+                        >
+                          {meta.label}
+                        </span>
+                      )
+                    })
                   )}
-                  <span className={`px-1.5 py-0.5 rounded border ${answerPillClass(a.q2)}`}>
-                    Q2: {a.q2 || '—'}
-                  </span>
-                  <span className="text-slate-500">{timeAgo(a.updatedAt)}</span>
                 </div>
               </div>
             ))}

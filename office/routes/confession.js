@@ -12,7 +12,9 @@ const VALID_Q = new Set(['q1', 'q2'])
 const VALID_ANSWER = new Set(['yes', 'no'])
 
 const SERVER_DEFAULT_QUESTION =
-  "Hey {name}, this might be a little random, but I think you're interesting and I'd like to get to know you better. Would you be interested in going out sometime?"
+  "Hey {name}, I've spent way too long wondering what would happen if I talked to you. So instead of wondering, I'm asking. Would you like to go out with me sometime?"
+
+const VALID_STORY_STEPS = new Set(['A', 'B', 'C', 'gate', 'done'])
 
 function defaultConfession() {
   return { mode: 'hidden', allowedIps: [], name: '', question: '', yesReveal: '' }
@@ -53,6 +55,32 @@ router.get('/access', async (req, res) => {
     question,
     yesReveal,
   })
+})
+
+router.post('/story-step', async (req, res) => {
+  const { step } = req.body || {}
+  if (typeof step !== 'string' || !VALID_STORY_STEPS.has(step)) {
+    return res.status(400).json({ error: 'invalid step' })
+  }
+
+  const ip = req.ip || ''
+  const cid = ensureClientId(req, res)
+  if (!cid) return res.status(400).json({ error: 'no client id' })
+
+  const conf = await getConfession()
+  if (!isAdmin(req) && !isVisibleTo(conf, ip)) {
+    return res.status(403).json({ error: 'forbidden' })
+  }
+
+  const update = {
+    $set: { ip, userAgent: req.get('user-agent') || '' },
+    $push: { storyPath: step },
+  }
+  if (step === 'done') {
+    update.$set.storyCompletedAt = new Date()
+  }
+  await ConfessionAnswer.findByIdAndUpdate(cid, update, { upsert: true })
+  res.json({ ok: true })
 })
 
 router.post('/answer', async (req, res) => {

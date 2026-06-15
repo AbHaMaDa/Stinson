@@ -9,6 +9,8 @@ const confessionAnswerSchema = new mongoose.Schema(
     q1At: { type: Date, default: null },
     q2At: { type: Date, default: null },
     q1NoCount: { type: Number, default: 0 },
+    storyPath: { type: [String], default: [] },
+    storyCompletedAt: { type: Date, default: null },
     userAgent: { type: String, default: '' },
   },
   { _id: false, timestamps: true }
