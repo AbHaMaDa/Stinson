@@ -572,6 +572,45 @@ function StaggeredText({ text, className, baseDelay = 0, perWord = 55 }) {
   )
 }
 
+function MultiLineStaggered({ text, perWord = 55 }) {
+  const lines = useMemo(() => text.split(/\r?\n/), [text])
+  let runningWords = 0
+  return (
+    <>
+      {lines.map((line, i) => {
+        const trimmed = line.trim()
+        if (!trimmed) {
+          return (
+            <span key={i} className="block" aria-hidden="true">
+              {' '}
+            </span>
+          )
+        }
+        const startDelay = runningWords * perWord
+        runningWords += trimmed.split(/\s+/).length
+        return (
+          <span key={i} dir="auto" className="block">
+            <StaggeredText text={line} baseDelay={startDelay} perWord={perWord} />
+          </span>
+        )
+      })}
+    </>
+  )
+}
+
+function DirAwareLines({ text }) {
+  const lines = useMemo(() => text.split(/\r?\n/), [text])
+  return (
+    <>
+      {lines.map((line, i) => (
+        <span key={i} dir="auto" className="block">
+          {line || ' '}
+        </span>
+      ))}
+    </>
+  )
+}
+
 function PillBtn({ children, variant = 'primary', innerRef, style, className = '', ...rest }) {
   const isPrimary = variant === 'primary'
   return (
@@ -1045,11 +1084,8 @@ function Phase1Runaway({ question, onYes, onNope }) {
           ?
         </span>
       </OrbitalCore>
-      <h1
-        dir="auto"
-        className="mt-8 max-w-xl text-xl sm:text-2xl font-bold text-white tracking-tight leading-relaxed whitespace-pre-line"
-      >
-        <StaggeredText text={question} />
+      <h1 className="mt-8 max-w-xl text-xl sm:text-2xl font-bold text-white tracking-tight leading-relaxed">
+        <MultiLineStaggered text={question} />
       </h1>
       <div
         ref={zoneRef}
@@ -1105,11 +1141,8 @@ function Phase2FollowUp({ text, onAnswer }) {
       <OrbitalCore>
         <PlanetIcon />
       </OrbitalCore>
-      <h2
-        dir="auto"
-        className="mt-8 max-w-xl text-xl sm:text-2xl font-bold text-white tracking-tight leading-relaxed whitespace-pre-line"
-      >
-        <StaggeredText text={text} />
+      <h2 className="mt-8 max-w-xl text-xl sm:text-2xl font-bold text-white tracking-tight leading-relaxed">
+        <MultiLineStaggered text={text} />
       </h2>
       <div className="mt-10 flex flex-wrap justify-center gap-5">
         <PillBtn onClick={() => onAnswer(true)}>Yes</PillBtn>
@@ -1200,15 +1233,14 @@ function PhaseFinal({ variant, finalYes, finalNo }) {
         )}
       </OrbitalCore>
       <p
-        dir="auto"
         className={
           yes
-            ? 'mt-10 max-w-xl text-3xl sm:text-4xl font-extrabold tracking-tight leading-snug bg-gradient-to-r from-pink-200 via-purple-200 to-cyan-200 bg-[length:200%_100%] bg-clip-text text-transparent whitespace-pre-line'
-            : 'mt-10 max-w-xl text-2xl sm:text-3xl font-bold tracking-tight leading-snug text-slate-200/90 whitespace-pre-line'
+            ? 'mt-10 max-w-xl text-3xl sm:text-4xl font-extrabold tracking-tight leading-snug bg-gradient-to-r from-pink-200 via-purple-200 to-cyan-200 bg-[length:200%_100%] bg-clip-text text-transparent'
+            : 'mt-10 max-w-xl text-2xl sm:text-3xl font-bold tracking-tight leading-snug text-slate-200/90'
         }
         style={yes ? { animation: 'conf-shimmer 3.5s ease-in-out infinite' } : undefined}
       >
-        {text}
+        <DirAwareLines text={text} />
       </p>
     </div>
   )
