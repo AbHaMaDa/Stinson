@@ -17,7 +17,15 @@ const SERVER_DEFAULT_QUESTION =
 const VALID_STORY_STEPS = new Set(['A', 'B', 'C', 'gate', 'done'])
 
 function defaultConfession() {
-  return { mode: 'hidden', allowedIps: [], name: '', question: '', yesReveal: '' }
+  return {
+    mode: 'hidden',
+    allowedIps: [],
+    name: '',
+    question: '',
+    yesReveal: '',
+    finalYes: '',
+    finalNo: '',
+  }
 }
 
 async function getConfession() {
@@ -49,11 +57,15 @@ router.get('/access', async (req, res) => {
   if (!visible) return res.json({ visible: false })
   const question = interpolate(conf.question || SERVER_DEFAULT_QUESTION, conf.name)
   const yesReveal = interpolate(conf.yesReveal, conf.name)
+  const finalYes = interpolate(conf.finalYes, conf.name)
+  const finalNo = interpolate(conf.finalNo, conf.name)
   res.json({
     visible: true,
     admin,
     question,
     yesReveal,
+    finalYes,
+    finalNo,
   })
 })
 
@@ -134,7 +146,7 @@ router.get('/settings', requireAuth, async (_req, res) => {
 })
 
 router.put('/settings', requireAuth, async (req, res) => {
-  const { mode, allowedIps, name, question, yesReveal } = req.body || {}
+  const { mode, allowedIps, name, question, yesReveal, finalYes, finalNo } = req.body || {}
   const update = {}
   if (mode !== undefined) {
     if (!VALID_MODES.has(mode)) {
@@ -165,6 +177,18 @@ router.put('/settings', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'yesReveal must be a string up to 1000 chars' })
     }
     update['confession.yesReveal'] = yesReveal
+  }
+  if (finalYes !== undefined) {
+    if (typeof finalYes !== 'string' || finalYes.length > 500) {
+      return res.status(400).json({ error: 'finalYes must be a string up to 500 chars' })
+    }
+    update['confession.finalYes'] = finalYes
+  }
+  if (finalNo !== undefined) {
+    if (typeof finalNo !== 'string' || finalNo.length > 500) {
+      return res.status(400).json({ error: 'finalNo must be a string up to 500 chars' })
+    }
+    update['confession.finalNo'] = finalNo
   }
   await SiteSettings.findByIdAndUpdate(
     SITE_SETTINGS_ID,

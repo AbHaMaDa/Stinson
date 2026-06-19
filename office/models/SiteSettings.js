@@ -20,6 +20,8 @@ const siteSettingsSchema = new mongoose.Schema(
       name: { type: String, maxlength: 80, default: '' },
       question: { type: String, maxlength: 300, default: '' },
       yesReveal: { type: String, maxlength: 1000, default: '' },
+      finalYes: { type: String, maxlength: 500, default: '' },
+      finalNo: { type: String, maxlength: 500, default: '' },
     },
     blockedIps: { type: [String], default: [] },
   },

@@ -93,11 +93,15 @@ export default function Visitors() {
     name: '',
     question: '',
     yesReveal: '',
+    finalYes: '',
+    finalNo: '',
   })
   const [savingConfession, setSavingConfession] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
   const [questionDraft, setQuestionDraft] = useState('')
   const [revealDraft, setRevealDraft] = useState('')
+  const [finalYesDraft, setFinalYesDraft] = useState('')
+  const [finalNoDraft, setFinalNoDraft] = useState('')
   const [blockedIps, setBlockedIps] = useState([])
   const [savingBlocked, setSavingBlocked] = useState(false)
   const [yourIp, setYourIp] = useState('')
@@ -129,11 +133,15 @@ export default function Visitors() {
         name: cRes.data.name || '',
         question: cRes.data.question || '',
         yesReveal: cRes.data.yesReveal || '',
+        finalYes: cRes.data.finalYes || '',
+        finalNo: cRes.data.finalNo || '',
       }
       setConfession(conf)
       setNameDraft(conf.name)
       setQuestionDraft(conf.question)
       setRevealDraft(conf.yesReveal)
+      setFinalYesDraft(conf.finalYes)
+      setFinalNoDraft(conf.finalNo)
       setBlockedIps(bRes.data.blockedIps || [])
       setYourIp(bRes.data.yourIp || '')
       setConfessionAnswers(aRes.data.items || [])
@@ -167,6 +175,8 @@ export default function Visitors() {
         name: data.name || '',
         question: data.question || '',
         yesReveal: data.yesReveal || '',
+        finalYes: data.finalYes || '',
+        finalNo: data.finalNo || '',
       })
     } catch (err) {
       setConfession(prev)
@@ -190,6 +200,16 @@ export default function Visitors() {
   const saveReveal = () => {
     if (revealDraft !== confession.yesReveal) {
       saveConfession({ yesReveal: revealDraft })
+    }
+  }
+  const saveFinalYes = () => {
+    if (finalYesDraft !== confession.finalYes) {
+      saveConfession({ finalYes: finalYesDraft })
+    }
+  }
+  const saveFinalNo = () => {
+    if (finalNoDraft !== confession.finalNo) {
+      saveConfession({ finalNo: finalNoDraft })
     }
   }
 
@@ -346,6 +366,7 @@ export default function Visitors() {
             Question
           </label>
           <textarea
+            dir="auto"
             value={questionDraft}
             onChange={(e) => setQuestionDraft(e.target.value)}
             onBlur={saveQuestion}
@@ -361,6 +382,7 @@ export default function Visitors() {
             Yes reveal
           </label>
           <textarea
+            dir="auto"
             value={revealDraft}
             onChange={(e) => setRevealDraft(e.target.value)}
             onBlur={saveReveal}
@@ -371,6 +393,44 @@ export default function Visitors() {
           />
           <p className="text-[11px] text-slate-500 mt-1">
             Shown after Yes is clicked.
+          </p>
+        </div>
+
+        <div>
+          <label className="text-xs text-slate-400 font-medium block mb-1">
+            Final yes message
+          </label>
+          <textarea
+            dir="auto"
+            value={finalYesDraft}
+            onChange={(e) => setFinalYesDraft(e.target.value)}
+            onBlur={saveFinalYes}
+            maxLength={500}
+            rows={2}
+            placeholder="aaaawesooome!, now u just let me know"
+            className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder:text-slate-500 px-3 py-2 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-colors duration-200 resize-y"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">
+            Shown after the final Yes.
+          </p>
+        </div>
+
+        <div>
+          <label className="text-xs text-slate-400 font-medium block mb-1">
+            Final no message
+          </label>
+          <textarea
+            dir="auto"
+            value={finalNoDraft}
+            onChange={(e) => setFinalNoDraft(e.target.value)}
+            onBlur={saveFinalNo}
+            maxLength={500}
+            rows={2}
+            placeholder="yeaah who cares, now u just let me know"
+            className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder:text-slate-500 px-3 py-2 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-colors duration-200 resize-y"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">
+            Shown after the final No.
           </p>
         </div>
 

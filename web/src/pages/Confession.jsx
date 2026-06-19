@@ -1045,7 +1045,10 @@ function Phase1Runaway({ question, onYes, onNope }) {
           ?
         </span>
       </OrbitalCore>
-      <h1 className="mt-8 max-w-xl text-xl sm:text-2xl font-bold text-white tracking-tight leading-relaxed">
+      <h1
+        dir="auto"
+        className="mt-8 max-w-xl text-xl sm:text-2xl font-bold text-white tracking-tight leading-relaxed whitespace-pre-line"
+      >
         <StaggeredText text={question} />
       </h1>
       <div
@@ -1102,7 +1105,10 @@ function Phase2FollowUp({ text, onAnswer }) {
       <OrbitalCore>
         <PlanetIcon />
       </OrbitalCore>
-      <h2 className="mt-8 max-w-xl text-xl sm:text-2xl font-bold text-white tracking-tight leading-relaxed">
+      <h2
+        dir="auto"
+        className="mt-8 max-w-xl text-xl sm:text-2xl font-bold text-white tracking-tight leading-relaxed whitespace-pre-line"
+      >
         <StaggeredText text={text} />
       </h2>
       <div className="mt-10 flex flex-wrap justify-center gap-5">
@@ -1163,8 +1169,9 @@ function ParticleBurst({ count = 24 }) {
   )
 }
 
-function PhaseFinal({ variant }) {
+function PhaseFinal({ variant, finalYes, finalNo }) {
   const yes = variant === 'yes'
+  const text = yes ? finalYes || FINAL_YES : finalNo || FINAL_NO
   return (
     <div className="relative flex flex-col items-center text-center px-4 py-6 w-full">
       {yes && <ParticleBurst />}
@@ -1193,20 +1200,21 @@ function PhaseFinal({ variant }) {
         )}
       </OrbitalCore>
       <p
+        dir="auto"
         className={
           yes
-            ? 'mt-10 max-w-xl text-3xl sm:text-4xl font-extrabold tracking-tight leading-snug bg-gradient-to-r from-pink-200 via-purple-200 to-cyan-200 bg-[length:200%_100%] bg-clip-text text-transparent'
-            : 'mt-10 max-w-xl text-2xl sm:text-3xl font-bold tracking-tight leading-snug text-slate-200/90'
+            ? 'mt-10 max-w-xl text-3xl sm:text-4xl font-extrabold tracking-tight leading-snug bg-gradient-to-r from-pink-200 via-purple-200 to-cyan-200 bg-[length:200%_100%] bg-clip-text text-transparent whitespace-pre-line'
+            : 'mt-10 max-w-xl text-2xl sm:text-3xl font-bold tracking-tight leading-snug text-slate-200/90 whitespace-pre-line'
         }
         style={yes ? { animation: 'conf-shimmer 3.5s ease-in-out infinite' } : undefined}
       >
-        {yes ? FINAL_YES : FINAL_NO}
+        {text}
       </p>
     </div>
   )
 }
 
-function ConfessionGame({ question, yesReveal }) {
+function ConfessionGame({ question, yesReveal, finalYes, finalNo }) {
   const [phase, setPhase] = useState('story')
   const [storyNodeId, setStoryNodeId] = useState(STORY_START)
   const [nopeCount, setNopeCount] = useState(0)
@@ -1287,8 +1295,12 @@ function ConfessionGame({ question, yesReveal }) {
                 }}
               />
             )}
-            {phase === 'finalYes' && <PhaseFinal variant="yes" />}
-            {phase === 'finalNo' && <PhaseFinal variant="no" />}
+            {phase === 'finalYes' && (
+              <PhaseFinal variant="yes" finalYes={finalYes} finalNo={finalNo} />
+            )}
+            {phase === 'finalNo' && (
+              <PhaseFinal variant="no" finalYes={finalYes} finalNo={finalNo} />
+            )}
           </div>
         </div>
         {phase === 'q1' && <HangingRabbit count={nopeCount} />}
@@ -1298,7 +1310,14 @@ function ConfessionGame({ question, yesReveal }) {
 }
 
 export default function Confession() {
-  const [state, setState] = useState({ loading: true, visible: false, question: '', yesReveal: '' })
+  const [state, setState] = useState({
+    loading: true,
+    visible: false,
+    question: '',
+    yesReveal: '',
+    finalYes: '',
+    finalNo: '',
+  })
 
   useDocumentTitle(state.visible ? 'Confession' : 'Page not found')
 
@@ -1313,10 +1332,20 @@ export default function Confession() {
           visible: !!data.visible,
           question: data.question || '',
           yesReveal: data.yesReveal || '',
+          finalYes: data.finalYes || '',
+          finalNo: data.finalNo || '',
         })
       })
       .catch(() => {
-        if (!cancelled) setState({ loading: false, visible: false, question: '', yesReveal: '' })
+        if (!cancelled)
+          setState({
+            loading: false,
+            visible: false,
+            question: '',
+            yesReveal: '',
+            finalYes: '',
+            finalNo: '',
+          })
       })
     return () => {
       cancelled = true
@@ -1333,5 +1362,12 @@ export default function Confession() {
 
   if (!state.visible) return <NotFound />
 
-  return <ConfessionGame question={state.question} yesReveal={state.yesReveal} />
+  return (
+    <ConfessionGame
+      question={state.question}
+      yesReveal={state.yesReveal}
+      finalYes={state.finalYes}
+      finalNo={state.finalNo}
+    />
+  )
 }
