@@ -7,24 +7,24 @@ export const STORY_NODES = {
     mood: 'awakening',
     title: 'The Awakening',
     narration:
-      "The story begins in silence. You open your eyes to find yourself standing on a path made of polished white stone, cutting through a vast, quiet forest. Hanging in the air before you are three glowing archways, each leading a completely different way.",
+      "The story starts in silence. You open your eyes and see a smooth white stone path running through a big, quiet forest. In front of you, three glowing arches float in the air, and each one leads somewhere different.",
     choices: [
       {
         id: 'A',
         label: 'The Arch of Curiosity',
-        sublabel: 'Warm, unpredictable shifting light',
+        sublabel: 'Warm, shifting light that keeps changing',
         next: 'curiosity',
       },
       {
         id: 'B',
         label: 'The Arch of Serenity',
-        sublabel: 'Calm, still, and deeply peaceful',
+        sublabel: 'Calm, still, and full of peace',
         next: 'serenity',
       },
       {
         id: 'C',
         label: 'The Arch of Shadows',
-        sublabel: 'Mysterious, daring, and unknown',
+        sublabel: 'Mysterious, bold, and unknown',
         next: 'shadows',
       },
     ],
@@ -36,17 +36,17 @@ export const STORY_NODES = {
     mood: 'curiosity',
     title: 'The Core Elements',
     narration:
-      "The air instantly fills with the sound of distant laughter and faint, beautiful music. As you walk, a crystal pedestal appears in your path, holding a glowing hourglass. A voice echoes:",
-    prompt: "Time is a gift. How do you choose to spend it?",
+      "The air fills with the sound of far-away laughter and soft, sweet music. As you walk, a crystal stand shows up on the path, holding a glowing hourglass. A voice speaks:",
+    prompt: 'Time is a gift. How do you choose to spend it?',
     choices: [
       {
         id: 'A',
-        label: 'Chasing chaotic moments that make me laugh until my stomach hurts.',
+        label: 'Going after wild, fun moments that make me laugh till my stomach hurts.',
         next: 'curiosity_festival',
       },
       {
         id: 'B',
-        label: 'Building quiet, deep connections with the people who matter.',
+        label: 'Building quiet, deep bonds with the people who matter most.',
         next: 'curiosity_cafe',
       },
     ],
@@ -56,17 +56,17 @@ export const STORY_NODES = {
     mood: 'serenity',
     title: 'The Core Elements',
     narration:
-      "A wave of profound calm washes over you. The path winds along a perfectly still, glass-like lake reflecting a sky full of stars. At the edge of the water, a silver quill hovers over a blank book. The voice echoes:",
-    prompt: "Every life is a blank page. What matters most to you in your chapters?",
+      "A deep calm spreads over you. The path runs along a still lake, smooth like glass, that mirrors a sky full of stars. By the edge of the water, a silver pen floats above an empty book. The voice speaks:",
+    prompt: 'Every life is a blank page. What matters most to you in yours?',
     choices: [
       {
         id: 'A',
-        label: 'Having the freedom to be entirely myself without any pretense.',
+        label: 'Being free to fully be myself, without any pretending.',
         next: 'serenity_garden',
       },
       {
         id: 'B',
-        label: 'Finding someone who truly understands the thoughts I keep to myself.',
+        label: 'Finding someone who really gets the thoughts I keep inside.',
         next: 'serenity_key',
       },
     ],
@@ -76,17 +76,17 @@ export const STORY_NODES = {
     mood: 'shadows',
     title: 'The Core Elements',
     narration:
-      "The path becomes sleek, bold, and modern, cutting through a canyon under a brilliant midnight sky. Suddenly, the ground beneath you shimmers, revealing a complex, glowing labyrinth of light. The voice echoes:",
-    prompt: "The best paths are the ones we don't expect. What drives you forward?",
+      "The path turns smooth, bold, and modern, running through a canyon under a bright midnight sky. Suddenly the ground under you shines, showing a tricky, glowing maze of light. The voice speaks:",
+    prompt: "The best paths are the ones we don't see coming. What keeps you moving forward?",
     choices: [
       {
         id: 'A',
-        label: 'The excitement of discovering something entirely new.',
+        label: 'The thrill of finding something totally new.',
         next: 'shadows_compass',
       },
       {
         id: 'B',
-        label: 'The loyalty and warmth of a steady presence beside me.',
+        label: 'The loyalty and warmth of someone who is always by my side.',
         next: 'shadows_cave',
       },
     ],
@@ -98,17 +98,17 @@ export const STORY_NODES = {
     mood: 'curiosity_festival',
     title: 'Spark of Joy',
     narration:
-      "The path transforms into a lively night festival. A street vendor offers you a mysterious velvet box. 'Inside is a spark of absolute joy,' he says.",
+      "The path turns into a busy night festival. A street seller hands you a strange velvet box. 'Inside is a spark of pure joy,' he says.",
     prompt: 'How will you share it?',
     choices: [
       {
         id: 'A',
-        label: "I'd open it immediately to turn a normal day into a wild celebration.",
+        label: "I'd open it right away to turn a regular day into a wild party.",
         next: 'gate',
       },
       {
         id: 'B',
-        label: "I'd save it for that one specific person who always matches my energy.",
+        label: "I'd save it for that one person who always matches my energy.",
         next: 'gate',
       },
     ],
@@ -118,17 +118,17 @@ export const STORY_NODES = {
     mood: 'curiosity_cafe',
     title: 'The Late-Night Café',
     narration:
-      "The festival lights soften into a cozy, late-night café setup. Two empty chairs sit by a window looking out at a gentle rainstorm. A small note on the table asks:",
-    prompt: 'What makes a conversation truly unforgettable?',
+      "The festival lights fade into a cozy, late-night café. Two empty chairs sit by a window with soft rain falling outside. A small note on the table asks:",
+    prompt: 'What makes a talk truly unforgettable?',
     choices: [
       {
         id: 'A',
-        label: 'Staying up until 3 AM talking about everything and absolutely nothing at all.',
+        label: 'Staying up till 3 AM, talking about everything and nothing at the same time.',
         next: 'gate',
       },
       {
         id: 'B',
-        label: 'When you realize the other person remembers the tiny details you forgot you even said.',
+        label: 'When the other person remembers the small things you forgot you even said.',
         next: 'gate',
       },
     ],
@@ -138,17 +138,17 @@ export const STORY_NODES = {
     mood: 'serenity_garden',
     title: 'The Greenhouse Garden',
     narration:
-      "The starlit lake opens up to a sprawling, beautiful greenhouse garden. The plants grow in patterns that perfectly mimic your thoughts. A stone inscription reads:",
-    prompt: 'True freedom is rare. When do you feel most comfortable?',
+      "The starlit lake opens up to a wide, beautiful greenhouse garden. The plants grow in shapes that match your thoughts perfectly. A stone carving reads:",
+    prompt: 'Real freedom is rare. When do you feel most at ease?',
     choices: [
       {
         id: 'A',
-        label: 'When I can drop my guard completely and just laugh without overthinking.',
+        label: 'When I can drop my guard fully and just laugh without thinking too much.',
         next: 'gate',
       },
       {
         id: 'B',
-        label: 'When someone accepts my quiet moments just as much as my loud ones.',
+        label: 'When someone accepts my quiet side just as much as my loud one.',
         next: 'gate',
       },
     ],
@@ -158,17 +158,17 @@ export const STORY_NODES = {
     mood: 'serenity_key',
     title: 'The Silver Key',
     narration:
-      "The lake water begins to glow from beneath, casting soft patterns on the trees. A silver key appears in your hand, fitting perfectly into a hidden lock in the air. A whisper echoes:",
-    prompt: 'To be truly understood is a rare treasure. What are you looking for?',
+      "The lake starts to glow from below, casting soft light on the trees. A silver key shows up in your hand and fits into a hidden lock floating in the air. A whisper speaks:",
+    prompt: 'Being truly understood is a rare gift. What are you looking for?',
     choices: [
       {
         id: 'A',
-        label: "Someone who reads between the lines when I say 'I'm fine.'",
+        label: "Someone who reads between the lines when I say ‘I'm fine.’",
         next: 'gate',
       },
       {
         id: 'B',
-        label: 'A presence that makes the rest of the chaotic world feel completely quiet.',
+        label: 'Someone whose company makes the rest of the noisy world feel totally quiet.',
         next: 'gate',
       },
     ],
@@ -178,17 +178,17 @@ export const STORY_NODES = {
     mood: 'shadows_compass',
     title: 'The Neon Compass',
     narration:
-      "The labyrinth walls dissolve, leaving you on a mountain peak overlooking a vast digital skyline. A neon compass appears, its needle spinning wildly until it points directly forward. 'The horizon is calling,' the wind whispers.",
+      "The maze walls fade away, leaving you on a mountain top looking over a huge digital skyline. A neon compass shows up, its needle spinning fast until it points straight ahead. 'The horizon is calling,' the wind whispers.",
     prompt: 'What are you looking for?',
     choices: [
       {
         id: 'A',
-        label: 'An unexpected plot twist that completely changes the direction of my year.',
+        label: 'A surprise twist that completely changes the direction of my year.',
         next: 'gate',
       },
       {
         id: 'B',
-        label: 'A reliable co-pilot to share the craziest paths with.',
+        label: 'A solid partner to share the craziest roads with.',
         next: 'gate',
       },
     ],
@@ -198,17 +198,17 @@ export const STORY_NODES = {
     mood: 'shadows_cave',
     title: 'The Sheltered Cave',
     narration:
-      "The modern canyon pathway narrows into a safe, sheltered cave lit by a warm, crackling campfire. It feels entirely isolated from the rest of the world. A shield on the wall is engraved with a single question:",
-    prompt: 'What is the strongest force against the dark?',
+      "The modern canyon path narrows into a safe cave lit by a warm, crackling campfire. It feels totally cut off from the rest of the world. A shield on the wall is carved with one question:",
+    prompt: "What's the strongest thing against the dark?",
     choices: [
       {
         id: 'A',
-        label: "Unconditional trust that doesn't need to be constantly proven.",
+        label: "Trust that doesn't need to be proven over and over.",
         next: 'gate',
       },
       {
         id: 'B',
-        label: 'Knowing there is one specific person who always has your back, no matter what.',
+        label: "Knowing there's one person who always has your back, no matter what.",
         next: 'gate',
       },
     ],
@@ -234,8 +234,8 @@ export const STORY_NODES = {
     title: 'The Reveal',
     paragraphs: [
       "The gates swing open.",
-      "This world didn't exist until today. I built it for you.",
-      "Every path you walked, every tier you unlocked, and every line of code on this page was crafted by me — because standard words couldn't possibly capture how much you mean to me.",
+      "This world didn't exist until today. I made it for you.",
+      "Every path you walked, every door you opened, and every line of code on this page was made by me — because plain words could never show how much you mean to me.",
     ],
     cta: 'Next',
     next: null,
