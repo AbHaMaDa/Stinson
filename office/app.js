@@ -35,7 +35,7 @@ app.use(cookieParser())
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
-app.use('/api', async (_req, res, next) => {
+app.use('/api', async (req, res, next) => {
   try {
     await ensureDB()
     next()
@@ -44,6 +44,8 @@ app.use('/api', async (_req, res, next) => {
     res.status(503).json({ error: 'database unavailable' })
   }
 })
+
+app.use('/api', visitorLogger)
 
 app.get('/', (_req, res) => {
   const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173'
@@ -173,7 +175,6 @@ app.get('/', (_req, res) => {
 })
 
 app.use('/api', ipBlock)
-app.use('/api', visitorLogger)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/messages', messageRoutes)
