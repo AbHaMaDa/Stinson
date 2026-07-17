@@ -39,21 +39,26 @@ async function logVisit(ip, info) {
 }
 
 async function logDevice(cid, info) {
-  await Device.findByIdAndUpdate(
-    cid,
-    {
-      $set: {
-        ip: info.ip,
-        fingerprint: info.fingerprint,
-        userAgent: info.userAgent,
-        lastSeen: info.now,
-        lastPath: info.path,
-      },
-      $inc: { hits: 1 },
-      $setOnInsert: { firstSeen: info.now },
+  const existing = await Device.findById(cid).select('_id landingPage').lean()
+  const update = {
+    $set: {
+      ip: info.ip,
+      fingerprint: info.fingerprint,
+      userAgent: info.userAgent,
+      lastSeen: info.now,
+      lastPath: info.path,
     },
-    { upsert: true }
-  )
+    $inc: { hits: 1 },
+    $setOnInsert: {
+      firstSeen: info.now,
+      landingPage: info.landingPage,
+    },
+  }
+  // Only set landingPage if not already stored for this device
+  if (existing && !existing.landingPage && info.landingPage) {
+    update.$set.landingPage = info.landingPage
+  }
+  await Device.findByIdAndUpdate(cid, update, { upsert: true })
 }
 
 export async function visitorLogger(req, res, next) {

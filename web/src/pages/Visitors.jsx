@@ -775,6 +775,12 @@ export default function Visitors() {
                               </span>
                             )}
                           </div>
+                          {d.landingPage && (
+                            <p className="text-slate-300 truncate" title={d.landingPage}>
+                              <span className="text-cyan-400 font-medium text-[11px]">Entered via:</span>{' '}
+                              <span className="font-mono text-[11px]">{d.landingPage}</span>
+                            </p>
+                          )}
                           {d.userAgent && (
                             <p className="text-slate-500 truncate" title={d.userAgent}>
                               {d.userAgent}

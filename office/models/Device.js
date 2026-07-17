@@ -10,6 +10,7 @@ const deviceSchema = new mongoose.Schema(
     lastSeen: { type: Date, default: Date.now },
     hits: { type: Number, default: 0 },
     lastPath: { type: String, default: '' },
+    landingPage: { type: String, default: '' },
   },
   { _id: false, timestamps: false }
 )
