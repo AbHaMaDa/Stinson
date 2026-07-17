@@ -1,7 +1,6 @@
 import { Visitor } from '../models/Visitor.js'
 import { Device } from '../models/Device.js'
 import { lookupGeo } from '../lib/geo.js'
-import { runInBackground } from '../lib/background.js'
 import { ensureClientId, softFingerprint } from '../lib/clientId.js'
 
 const SKIP_PREFIXES = ['/visitors', '/health']
@@ -50,7 +49,7 @@ async function logDevice(cid, info) {
   )
 }
 
-export function visitorLogger(req, res, next) {
+export async function visitorLogger(req, res, next) {
   if (shouldSkip(req.path)) return next()
   if (req.cookies?.[AUTH_COOKIE_NAME]) return next()
   const cid = ensureClientId(req, res)
@@ -65,7 +64,9 @@ export function visitorLogger(req, res, next) {
     method: req.method,
     isAdmin: false,
   }
-  runInBackground(logVisit(ip, info), 'visitor-log')
-  runInBackground(logDevice(cid, info), 'device-log')
+  await Promise.all([
+    logVisit(ip, info).catch((e) => console.warn('[visitor-log] failed:', e?.message)),
+    logDevice(cid, info).catch((e) => console.warn('[device-log] failed:', e?.message)),
+  ])
   next()
 }
