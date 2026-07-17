@@ -728,6 +728,18 @@ export default function Visitors() {
                   <p className="text-slate-400 text-xs mt-1">
                     First seen {timeAgo(v.firstSeen)} · Last seen {timeAgo(v.lastSeen)}
                   </p>
+                  {v.landingPage && (
+                    <p className="text-slate-300 text-xs mt-1 truncate" title={v.landingPage}>
+                      <span className="text-cyan-400 font-medium">Entered via:</span>{' '}
+                      <span className="font-mono">{v.landingPage}</span>
+                    </p>
+                  )}
+                  {v.lastReferer && (
+                    <p className="text-slate-500 text-[11px] mt-0.5 truncate" title={v.lastReferer}>
+                      <span className="text-slate-500">Referred from:</span>{' '}
+                      <a href={v.lastReferer} target="_blank" rel="noreferrer" className="text-cyan-400/70 hover:underline">{v.lastReferer}</a>
+                    </p>
+                  )}
                   <p className="text-slate-500 text-xs mt-1 truncate">
                     <span className="text-slate-400">{v.lastMethod}</span> {v.lastPath}
                   </p>

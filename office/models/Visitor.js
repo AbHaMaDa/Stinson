@@ -8,6 +8,7 @@ const visitorSchema = new mongoose.Schema(
     hits: { type: Number, default: 0 },
     userAgent: { type: String, default: '' },
     lastPath: { type: String, default: '' },
+    landingPage: { type: String, default: '' },
     lastMethod: { type: String, default: '' },
     lastReferer: { type: String, default: '' },
     country: { type: String, default: '' },

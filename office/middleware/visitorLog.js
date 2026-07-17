@@ -11,7 +11,7 @@ function shouldSkip(path) {
 }
 
 async function logVisit(ip, info) {
-  const existing = await Visitor.findById(ip).select('_id').lean()
+  const existing = await Visitor.findById(ip).select('_id landingPage').lean()
   const update = {
     $set: {
       lastSeen: info.now,
@@ -22,7 +22,14 @@ async function logVisit(ip, info) {
       isAdmin: info.isAdmin,
     },
     $inc: { hits: 1 },
-    $setOnInsert: { firstSeen: info.now },
+    $setOnInsert: {
+      firstSeen: info.now,
+      landingPage: info.landingPage,
+    },
+  }
+  // Only update landingPage if it hasn't been set yet
+  if (existing && !existing.landingPage && info.landingPage) {
+    update.$set.landingPage = info.landingPage
   }
   if (!existing) {
     const geo = await lookupGeo(ip)
@@ -54,6 +61,7 @@ export async function visitorLogger(req, res, next) {
   if (req.cookies?.[AUTH_COOKIE_NAME]) return next()
   const cid = ensureClientId(req, res)
   const ip = req.ip || 'unknown'
+  const landingPage = req.get('x-landing-page') || ''
   const info = {
     now: new Date(),
     ip,
@@ -63,6 +71,7 @@ export async function visitorLogger(req, res, next) {
     path: (req.baseUrl || '') + req.path,
     method: req.method,
     isAdmin: false,
+    landingPage,
   }
   await Promise.all([
     logVisit(ip, info).catch((e) => console.warn('[visitor-log] failed:', e?.message)),
