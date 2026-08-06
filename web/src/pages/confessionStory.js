@@ -234,7 +234,8 @@ export const STORY_NODES = {
     title: 'The Reveal',
     paragraphs: [
       "The gates swing open.",
-      "This world didn't exist until today. I made it for you."
+      "This world didn't exist until today. I made this.",
+      "Qismat ka intezar nahin kiya،Apni khamoshi ko mehnat mein badal diya.Yeh sab tumhare liye tha,Bas dua hai ke main tumhari kahani ka ajnabi musafir na banun."
     ],
     cta: 'Next',
     next: null,
